@@ -1,0 +1,25 @@
+{
+  "name": "korm",
+  "version": "0.0.1",
+  "description": "A simple orm with over knex.js which works with simple javascript objects and arrays",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel -D src/ --out-dir lib/",
+    "watch": "babel -w -D src/ --out-dir lib/"
+  },
+  "author": "Kapil Verma <kapv89@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "knex": "^0.9.0",
+    "kredis": "file:../kredis",
+    "lodash": "^3.10.1",
+    "md5": "^2.0.0",
+    "uuid": "^2.0.1"
+  },
+  "devDependencies": {
+    "babel-core": "^6.2.1",
+    "babel-preset-es2015": "^6.1.18",
+    "babel-preset-stage-1": "^6.1.18"
+  }
+}
