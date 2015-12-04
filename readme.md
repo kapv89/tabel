@@ -1,10 +1,10 @@
-# korm
+# Tabel
 
-## A simple orm with over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays
+## A simple orm with over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm if needed, and scale back down to a a table-gateway when needed
 
 #### MIT License
 
-`npm install --save torm`
+`npm install --save tabel`
 
 ### Sections
 

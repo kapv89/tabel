@@ -1,17 +1,17 @@
 import knex from 'knex';
 import KRedis from 'kredis';
-import {merge} from 'lodash';
+import {merge, isString} from 'lodash';
 
 import Table from './Table';
-import Scope from './Scope';
-import Track from './Track';
+import migrator from './migrator';
+import Util from './util/Util';
 
 export default class Orm {
   constructor(config) {
     if ('db' in config) {
       this.knex = knex(config.db);
     } else {
-      throw new Error('no `db` config found');
+      throw new Error(`no 'db' config found`);
     }
 
     if ('redis' in config) {
@@ -23,6 +23,15 @@ export default class Orm {
 
     // tables instances
     this.tables = new Map();
+
+    // tableColumns cache
+    this.tableColumns = new Map();
+
+    // migrator
+    this.migrator = migrator(this);
+
+    // util
+    this.util = new Util(this);
   }
 
   // raw expr helper
@@ -60,10 +69,10 @@ export default class Orm {
 
   // method to close the database
   close() {
-    const promises = [this.knex.destroy];
+    const promises = [this.knex.destroy()];
 
     if (this.redis) {
-      promises.push(this.redis.quit());
+      promises.push(this.redis.disconnect());
     }
 
     return Promise.all(promises);
@@ -75,7 +84,7 @@ export default class Orm {
   // let em do that
   load() {
     return Promise.all(
-      Array.from(this.tables.keys).map((name) => this.tableClass(name).load())
+      Array.from(this.tables.keys).map((name) => this.table(name).load())
     );
   }
 
@@ -85,65 +94,146 @@ export default class Orm {
   }
 
   // get a table object
-  table(tableName) {
-    return this.tables.get(tableName).fork();
+  table(tableName, trx=null) {
+    const tbl = this.tables.get(tableName).fork();
+
+    if (trx !== null) {
+      tbl.transacting(trx);
+    }
+
+    return tbl;
   }
 
   // shorthand for table
-  tbl(tableName) {
-    return this.table(tableName);
+  tbl(tableName, trx=null) {
+    return this.table(tableName, trx);
   }
 
-  defineTable(tableName, params) {
+  defineTable(params={}) {
+    const tableName = params.name;
+
+    if (! isString(tableName)) {
+      throw new Error(`Invalid table-name: ${tableName} supplied via key 'name'`);
+    }
+
     if (this.tableClasses.has(tableName)) {
       throw new Error(`Table '${tableName}' already defined`);
     }
 
-    this.tableClasses.set(tableName, this.newTableClass(tableName, params));
+    this.tableClasses.set(tableName, this.newTableClass(params));
     this.instantitateTable(tableName, params);
     return this;
   }
 
-  extendTable(tableName, params) {
+  extendTable(tableName, {scopes={}, joints={}, relations={}, methods={}}) {
     if (! this.tableClasses.has(tableName)) {
       throw new Error(`Table '${tableName}' not defined yet`);
     }
 
-    const ExtendedTableClass = this.extendTableClass(this.tableClasses.get(tableName), params);
+    const TableClass = this.tableClass(tableName);
+    const ExtendedTableClass = class extends TableClass {};
+
+    this.attachScopesToTableClass(ExtendedTableClass, scopes);
+    this.attachJointsToTableClass(ExtendedTableClass, joints);
+    this.attachRelationsToTableClass(ExtendedTableClass, relations);
+    this.attachMethodsToTableClass(ExtendedTableClass, methods);
+
     this.tableClasses.set(tableName, ExtendedTableClass);
-    this.instantitateTable(tableName, params);
+    this.instantitateTable(tableName);
     return this;
   }
 
-  instantitateTable(tableName, params) {
-    return this.tables.set(tableName, new this.tableClasses.get(tableName)(params));
+  instantitateTable(tableName) {
+    const TableClass = this.tableClasses.get(tableName);
+
+    return this.tables.set(tableName, new TableClass(this));
   }
 
-  newTableClass(tableName, params) {
-    const TableClass = ((orm) => class extends Table {
-      constructor() {
-        super(orm, tableName);
-      }
-    });
-
-    return this.extendTableClass(TableClass, params);
+  newTableClass(params) {
+    return this.extendTableClass(Table, params);
   }
 
   extendTableClass(TableClass, params) {
-    const {props, processors, scopes, joints, relations, methods} = merge(
+    const {name, props, processors, scopes, joints, relations, methods} = merge(
       // the defaults
-      {},
-      // supplied paramss
+      {
+        // the table's name, is required
+        name: null,
+
+        // table properties
+        props: {
+          key: 'id',
+          // default key column, can be ['user_id', 'post_id'] for composite keys
+          autoId: false,
+          // by default we don't assume that you use an auto generated db id
+          perPage: 25,
+          // standard batch size per page used by `forPage` method
+          // forPage method uses offset
+          // avoid that and use a keyset in prod (http://use-the-index-luke.com/no-offset)
+          timestamps: false
+          // set to `true` if you want auto timestamps or
+          // timestamps: ['created_at', 'updated_at'] (these are defaults when `true`)
+          // will be assigned in this order only
+        },
+
+        // used to process model and collection results fetched from the db
+        // override as you need to
+        processors: {
+          model(row) { return row; },
+          collection(rows) { return rows; }
+        },
+
+        // predefined scopes on the table
+        scopes: {},
+        // predefined joints on the table
+        joints: {},
+        // relations definitions for the table
+        relations: {},
+        // table methods defintions
+        methods: {}
+      },
+      // supplied params which will override the defaults
       params
     );
 
+    // the extended table class whose objects will behave as needed
     const ExtendedTableClass = class extends TableClass {};
 
+    // assign name to the table class
+    ExtendedTableClass.prototype.name = name;
+
+    // assign props to the table class
     ExtendedTableClass.prototype.props = props;
+
+    // assign processors to the table class
     ExtendedTableClass.prototype.processors = processors;
 
+    // store names of defined scopes, joints, relations, and methods
+    ExtendedTableClass.prototype.definedScopes = new Set();
+    ExtendedTableClass.prototype.definedJoints = new Set();
+    ExtendedTableClass.prototype.definedRelations = new Set();
+    ExtendedTableClass.prototype.definedMethods = new Set();
+
+    // attach scopes, joints, relations and methods to tables
+    // these are the only ones extendable after creation
+    this.attachScopesToTableClass(ExtendedTableClass, scopes);
+    this.attachJointsToTableClass(ExtendedTableClass, joints);
+    this.attachRelationsToTableClass(ExtendedTableClass, relations);
+    this.attachMethodsToTableClass(ExtendedTableClass, methods);
+
+    // return the extended table class
+    return ExtendedTableClass;
+  }
+
+  attachScopesToTableClass(TableClass, scopes) {
+    // keep a record of defined scopes
+    Object.keys(scopes).forEach((name) => {
+      TableClass.prototype.definedScopes.add(name);
+    });
+
+    // process and merge scopes with table class
     merge(
-      ExtendedTableClass.prototype,
+      TableClass.prototype,
       Object.keys(scopes).reduce((processed, name) => {
         return merge(processed, {
           [name](...args) {
@@ -155,10 +245,18 @@ export default class Orm {
         });
       }, {})
     );
+  }
 
+  attachJointsToTableClass(TableClass, joints) {
+    // keep a record of defined joints
+    Object.keys(joints).forEach((name) => {
+      TableClass.prototype.definedJoints.add(name);
+    });
+
+    // process and merge joints with table class
     merge(
-      ExtendedTableClass.prototype,
-      Object.keys(scopes).reduce((processed, name) => {
+      TableClass.prototype,
+      Object.keys(joints).reduce((processed, name) => {
         // predefined joints never take arguments
         return merge(processed, {
           [name]() {
@@ -176,30 +274,44 @@ export default class Orm {
         });
       }, {})
     );
+  }
 
+  attachRelationsToTableClass(TableClass, relations) {
+    // keep a record of defined relations
+    Object.keys(relations).forEach((name) => {
+      TableClass.prototype.definedRelations.add(name);
+    });
+
+    // process and merge relations with table class
     merge(
-      ExtendedTableClass.prototype,
+      TableClass.prototype,
       Object.keys(relations).reduce((processed, name) => {
         // const relation = relations[name];
         return merge(processed, {
           [name](model) {
             if (model) {
-              return relations[name].bind(this)().withModel(model);
+              return relations[name].bind(this)().setName(name).forModel(model);
             } else {
-              return relations[name].bind(this)();
+              return relations[name].bind(this)().setName(name);
             }
           }
         });
       }, {})
     );
+  }
 
+  attachMethodsToTableClass(TableClass, methods) {
+    // keep a record of defined methods
+    Object.keys(methods).forEach((name) => {
+      TableClass.prototype.definedMethods.add(name);
+    });
+
+    // process and merge relations with table class
     merge(
-      ExtendedTableClass.prototype,
-      Object.keys(relations).reduce((processed, name) => {
+      TableClass.prototype,
+      Object.keys(methods).reduce((processed, name) => {
         return merge(processed, {[name]: methods[name]});
       }, {})
     );
-
-    return ExtendedTableClass;
   }
 }

@@ -1,10 +1,6 @@
-import {isArray} from 'lodash';
-
 export default class Track {
-  constructor(scopes) {
-    if (! isArray(scopes)) {
-      scopes = [];
-    }
+  constructor(scopes=[]) {
+    this.scopes = scopes;
   }
 
   apply(q) {
@@ -23,6 +19,10 @@ export default class Track {
       this.scopes.push(scope);
       return this;
     }
+  }
+
+  fork() {
+    return new Track(this.scopes.slice(0));
   }
 
   rewind() {
