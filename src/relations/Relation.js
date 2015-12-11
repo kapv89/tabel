@@ -13,7 +13,8 @@ import Scope from '../Scope';
 import Track from '../Track';
 
 export default class Relation {
-  constructor() {
+  constructor(ownerTable) {
+    this.ownerTable = ownerTable;
     this.constraints = new Track();
     this.activeModel = null;
     this.relationName = null;
@@ -80,15 +81,15 @@ export default class Relation {
     }`;
   }
 
-  join(tableContext) {
+  join() {
     throw new Error('not implemented');
   }
 
-  joinPivot(tableContext) {
+  joinPivot() {
     throw new Error('not imeplemented');
   }
 
-  joinThrough(tableContext) {
+  joinThrough() {
     throw new Error('not imeplemented');
   }
 }

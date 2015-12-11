@@ -3,9 +3,9 @@ import {assign} from 'lodash';
 import Relation from './Relation';
 
 export default class BelongsTo extends Relation {
-  constructor(fromTable, toTable, foreignKey, otherKey) {
-    super();
-    assign(this, {fromTable, toTable, foreignKey, otherKey});
+  constructor(ownerTable, toTable, foreignKey, otherKey) {
+    super(ownerTable);
+    assign(this, {fromTable: ownerTable.fork(), toTable, foreignKey, otherKey});
   }
 
   initRelation(fromModels=[]) {
@@ -100,14 +100,14 @@ export default class BelongsTo extends Relation {
       .del();
   }
 
-  join(tableContext, joiner=(() => {}), label=null) {
+  join(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {});
     const {fromTable, toTable, foreignKey, otherKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.join(toTable.tableName(), (j) => {
           j.on(fromTable.c(foreignKey), '=', toTable.c(otherKey));
           joiner(j);
@@ -116,14 +116,14 @@ export default class BelongsTo extends Relation {
     }
   }
 
-  leftJoin(tableContext, joiner=(() => {}), label=null) {
+  leftJoin(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {fromTable, toTable, foreignKey, otherKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.leftJoin(toTable.tableName(), (j) => {
           j.on(fromTable.c(foreignKey), '=', toTable.c(otherKey));
           joiner(j);

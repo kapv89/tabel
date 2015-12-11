@@ -2,12 +2,13 @@ import knex from 'knex';
 import KRedis from 'kredis';
 import {merge, isString} from 'lodash';
 
+import isUsableObject from './isUsableObject';
 import Table from './Table';
 import migrator from './migrator';
 import Util from './util/Util';
 
 export default class Orm {
-  constructor(config) {
+  constructor(config={}) {
     if ('db' in config) {
       this.knex = knex(config.db);
     } else {
@@ -15,7 +16,7 @@ export default class Orm {
     }
 
     if ('redis' in config) {
-      this.redis = new KRedis(config.redis);
+      this.cache = new KRedis(config.redis);
     }
 
     // tables definitions
@@ -32,6 +33,18 @@ export default class Orm {
 
     // util
     this.util = new Util(this);
+
+    // exports which can be exported in place of orm instance
+    this.exports = {
+      orm: this,
+      table: this.table.bind(this),
+      trx: this.trx.bind(this),
+      raw: this.raw.bind(this),
+      migrator: this.migrator,
+      cache: this.cache,
+      knex: this.knex,
+      isUsableObject
+    };
   }
 
   // raw expr helper
@@ -71,8 +84,8 @@ export default class Orm {
   close() {
     const promises = [this.knex.destroy()];
 
-    if (this.redis) {
-      promises.push(this.redis.disconnect());
+    if (this.cache) {
+      promises.push(this.cache.disconnect());
     }
 
     return Promise.all(promises);

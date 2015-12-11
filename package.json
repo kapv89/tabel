@@ -4,7 +4,7 @@
   "description": "A simple orm with over knex.js which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:orm": "babel-node --stage 1 test/orm/main.js",
     "build": "npm run clean && babel --stage 1 -D src/ --out-dir lib/",
     "watch": "npm run clean && babel --stage 1 -w -D src/ --out-dir lib/",
     "clean": "rm -rf lib/"
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "babel": "^5.8.34",
-    "tape": "^4.2.2"
+    "faker": "^3.0.1",
+    "pg": "^4.4.3"
   }
 }

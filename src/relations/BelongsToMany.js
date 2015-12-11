@@ -1,19 +1,20 @@
-import {assign, isArray, isPlainObject} from 'lodash';
+import {assign, isArray} from 'lodash';
 
+import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 
 export default class BelongsToMany extends Relation {
-  constructor(fromTable, toTable, pivotTable, foreignKey, otherKey) {
-    super();
-    assign(this, {fromTable, toTable, pivotTable, foreignKey, otherKey});
+  constructor(ownerTable, toTable, pivotTable, foreignKey, otherKey, joiner=(() =>{})) {
+    super(ownerTable);
+    assign(this, {fromTable: ownerTable.fork(), toTable, pivotTable, foreignKey, otherKey});
 
     this.pivotFields = [foreignKey, otherKey];
 
     this.constrain((t) => {
-      t.scope((q) => q.join(
-        this.pivotTable.tableName(),
-        this.pivotTable.c(this.otherKey), '=', toTable.key()
-      ));
+      t.scope((q) => q.join(this.pivotTable.tableName(), (j) => {
+        j.on(this.pivotTable.c(this.otherKey), '=', toTable.keyCol());
+        joiner(j);
+      }));
     });
   }
 
@@ -118,7 +119,7 @@ export default class BelongsToMany extends Relation {
           return Promise.resolve([]);
         }
 
-        const relatedKeys = relatedModels.map((m) => isPlainObject(m) ? m[toTable.key()] : m);
+        const relatedKeys = relatedModels.map((m) => isUsableObject(m) ? m[toTable.key()] : m);
         const fromKey = fromModel[fromTable.key()];
 
         const pivots = relatedKeys.map((k) => {
@@ -283,14 +284,14 @@ export default class BelongsToMany extends Relation {
     ;
   }
 
-  join(tableContext, joiner=(() => {}), label=null) {
+  join(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {});
     const {pivotTable, toTable, otherKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return this.joinPivot(tableContext).joint((q) => {
+      return this.joinPivot().joint((q) => {
         q.join(toTable.tableName(), (j) => {
           j.on(toTable.keyCol(), '=', pivotTable.c(otherKey));
           joiner(j);
@@ -299,14 +300,14 @@ export default class BelongsToMany extends Relation {
     }
   }
 
-  joinPivot(tableContext, joiner=(() => {}), label=null) {
+  joinPivot(joiner=(() => {}), label=null) {
     label = this.pivotJointLabel(label, {});
     const {pivotTable, fromTable, foreignKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.join(pivotTable.tableName(), (j) => {
           j.on(fromTable.keyCol(), '=', pivotTable.c(foreignKey));
           joiner(j);
@@ -315,14 +316,14 @@ export default class BelongsToMany extends Relation {
     }
   }
 
-  leftJoin(tableContext, joiner=(() => {}), label=null) {
+  leftJoin(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {pivotTable, toTable, otherKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return this.leftJoinPivot(tableContext).joint((q) => {
+      return this.leftJoinPivot().joint((q) => {
         q.leftJoin(toTable.tableName(), (j) => {
           j.on(toTable.keyCol(), '=', pivotTable.c(otherKey));
           joiner(j);
@@ -331,14 +332,14 @@ export default class BelongsToMany extends Relation {
     }
   }
 
-  leftJoinPivot(tableContext, joiner=(() => {}), label=null) {
+  leftJoinPivot(joiner=(() => {}), label=null) {
     label = this.pivotJointLabel(label, {isLeftJoin: true});
     const {pivotTable, fromTable, foreignKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.leftJoin(pivotTable.tableName(), (j) => {
           j.on(fromTable.keyCol(), '=', pivotTable.c(foreignKey));
           joiner(j);

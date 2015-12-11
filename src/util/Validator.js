@@ -25,7 +25,7 @@
  *       ]).then((errors) => compact(errors));
  *     },
  *     ['meta'](meta, input) {
- *       if (! isPlainObject(meta)) {
+ *       if (! isUsableObject(meta)) {
  *         return ['meta should be an object'];
  *       } else {
  *         return compact(['target_country', 'twitter:og'].map((k) => {
@@ -37,7 +37,9 @@
  * )
  */
 
-import {assign, isArray, isPlainObject} from 'lodash';
+import {assign, isArray, toPlainObject} from 'lodash';
+
+import isUsableObject from '../isUsableObject';
 
 export default class Validator {
   constructor(container, validations=[]) {
@@ -52,7 +54,8 @@ export default class Validator {
   }
 
   addValidations(validations=[]) {
-    if (isPlainObject(validations)) {
+    if (isUsableObject(validations)) {
+      validations = toPlainObject(validations);
       validations = Object.keys(validations).map((k) => ({key: k, validation: validations[k]}));
     }
 
@@ -68,8 +71,16 @@ export default class Validator {
     return this;
   }
 
+  merge(validator) {
+    Array.from(validator.validation.keys()).forEach((k) => {
+      this.validations.set(k, validator.validations.get(k));
+    });
+
+    return this;
+  }
+
   findErrors(input={}) {
-    const keys = Object.keys(input).filter((k) => this.validations.has(k));
+    const keys = Array.from(this.validation.keys());
 
     return Promise.all(
       keys.map((k) => this.validations.get(k).bind(this)(input[k], input, k))
@@ -84,7 +95,7 @@ export default class Validator {
         return errorMessages.reduce((errors, msg, index) => {
           return assign({
             [keys[index]]: isArray(msg) ? msg : (
-              isPlainObject(msg) ? msg : [msg]
+              isUsableObject(msg) ? toPlainObject(msg) : [msg]
             )
           });
         }, {});

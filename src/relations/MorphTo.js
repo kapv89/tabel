@@ -1,11 +1,11 @@
-import {assign} from 'lodash';
+import {assign, isString} from 'lodash';
 
 import Relation from './Relation';
 
 export default class MorphTo extends Relation {
-  constructor(fromTable, toTables, typeField, foreignKey) {
-    super();
-    assign(this, {fromTable, toTables, typeField, foreignKey});
+  constructor(ownerTable, toTables, typeField, foreignKey) {
+    super(ownerTable);
+    assign(this, {fromTable: ownerTable.fork(), toTables, typeField, foreignKey});
   }
 
   initRelation(fromModels=[]) {
@@ -50,11 +50,11 @@ export default class MorphTo extends Relation {
     const {relationName, toTables, typeField, foreignKey} = this;
 
     const tableKeyDict = relatedModels.reduce((dict, {type, models}) => {
-      const table = toTables.filter((t) => t.tableName === type)[0];
+      const table = toTables.filter((t) => t.tableName() === type)[0];
 
       return assign(dict, {
-        type: models.reduce((keyDict, model) => {
-          return assign({[model[table.key()]]: model});
+        [type]: models.reduce((keyDict, model) => {
+          return assign(keyDict, {[model[table.key()]]: model});
         }, {})
       });
     }, {});
@@ -123,11 +123,59 @@ export default class MorphTo extends Relation {
     }
 
     const [fromModel] = args;
-    const table = this.toTables.filter((t) => t.tableName === fromModel[this.typeField])[0];
+    const table = this.toTables.filter((t) => t.tableName() === fromModel[this.typeField])[0];
 
     return this.constraints.apply(table.fork())
       .whereKey(fromModel[this.foreignKey])
       .del()
     ;
+  }
+
+  join(tableName, joiner=(() => {}), label=null) {
+    if (this.toTables.map((t) => t.tableName()).indexOf(tableName) === -1) {
+      return this.ownerTable;
+    }
+
+    label = this.jointLabel(`${tableName}${isString(label) ? `.${label}` : ''}`, {});
+    const toTable = this.toTables.filter((t) => t.tableName() === tableName)[0];
+    const {fromTable, typeField, foreignKey} = this;
+
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
+    } else {
+      return this.ownerTable.joint((q) => {
+        q.join(toTable.tableName(), (j) => {
+          j.on(fromTable.c(typeField), '=', toTable.raw('?', [toTable.tableName()]))
+           .on(fromTable.c(foreignKey), '=', toTable.keyCol());
+
+          joiner(j);
+        });
+      });
+    }
+  }
+
+  leftJoin(tableName, joiner=(() => {}), label=null) {
+    if (this.toTables.map((t) => t.tableName()).indexOf(tableName) === -1) {
+      return this.ownerTable;
+    }
+
+    label = this.jointLabel(`${tableName}${isString(label) ? `.${label}` : ''}`, {
+      isLeftJoin: true
+    });
+    const toTable = this.toTables.filter((t) => t.tableName() === tableName)[0];
+    const {fromTable, typeField, foreignKey} = this;
+
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
+    } else {
+      return this.ownerTable.joint((q) => {
+        q.leftJoin(toTable.tableName(), (j) => {
+          j.on(fromTable.c(typeField), '=', toTable.raw('?', [toTable.tableName()]))
+           .on(fromTable.c(foreignKey), '=', toTable.keyCol());
+
+          joiner(j);
+        });
+      });
+    }
   }
 }

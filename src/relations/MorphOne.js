@@ -4,13 +4,13 @@ import Relation from './Relation';
 import MorphTo from './Relation';
 
 export default class MorphOne extends Relation {
-  constructor(fromTable, toTable, inverse) {
+  constructor(ownerTable, toTable, inverse) {
     if (! (inverse instanceof MorphTo)) {
       throw new Error('inverse should be a MorphTo relation');
     }
 
-    super();
-    assign(this, {fromTable, toTable, inverse});
+    super(ownerTable);
+    assign(this, {fromTable: ownerTable.fork(), toTable, inverse});
   }
 
   initRelation(fromModels) {
@@ -109,15 +109,15 @@ export default class MorphOne extends Relation {
     ;
   }
 
-  join(tableContext, joiner=(() => {}), label=null) {
+  join(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {});
     const {fromTable, toTable, inverse} = this;
     const {foreignKey, typeField} = inverse;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.join(toTable.tableName(), (j) => {
           j.on(toTable.c(typeField), '=', fromTable.orm.raw('?', [fromTable.tableName()]))
            .on(toTable.c(foreignKey), '=', fromTable.keyCol());
@@ -128,15 +128,15 @@ export default class MorphOne extends Relation {
     }
   }
 
-  leftJoin(tableContext, joiner=(() => {}), label=null) {
+  leftJoin(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {fromTable, toTable, inverse} = this;
     const {foreignKey, typeField} = inverse;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.leftJoin(toTable.tableName(), (j) => {
           j.on(toTable.c(typeField), '=', fromTable.orm.raw('?', [fromTable.tableName()]))
            .on(toTable.c(foreignKey), '=', fromTable.keyCol());

@@ -33,7 +33,9 @@
  * );
  */
 
-import {isPlainObject, assign} from 'lodash';
+import {assign, toPlainObject} from 'lodash';
+
+import isUsableObject from '../isUsableObject';
 
 export default class Transformer {
   constructor(container, transformations=[]) {
@@ -48,7 +50,8 @@ export default class Transformer {
   }
 
   addTransformations(transformations=[]) {
-    if (isPlainObject(transformations)) {
+    if (isUsableObject(transformations)) {
+      transformations = toPlainObject(transformations);
       transformations = Object.keys(transformations).map((k) => ({key: k, transformation: transformations[k]}));
     }
 
@@ -61,6 +64,14 @@ export default class Transformer {
 
   addTransformation({key, transformation}) {
     this.transformations.set(key, transformation);
+    return this;
+  }
+
+  merge(transformer) {
+    Array.from(transformer.transformations.keys()).forEach((k) => {
+      this.transformations.set(k, transformer.transformations.get(k));
+    });
+
     return this;
   }
 

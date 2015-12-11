@@ -42,13 +42,14 @@ import uuid from 'uuid';
 import {
   isArray,
   isString,
-  isPlainObject,
   isDate,
   isNumber,
   assign,
-  merge
+  merge,
+  toPlainObject
 } from 'lodash';
 
+import isUsableObject from './isUsableObject';
 import Scope from './Scope';
 import Track from './Track';
 
@@ -66,8 +67,8 @@ export default class Table {
     this.orm = orm;
     this.scopeTrack = new Track();
 
-    if (this.orm.redis) {
-      this.cache = this.orm.redis.hash(this.tableName());
+    if (this.orm.cache) {
+      this.cache = this.orm.cache.hash(this.tableName());
     }
   }
 
@@ -103,9 +104,17 @@ export default class Table {
    * @return {knex.query} a fresh knex query for table with orm flags
    */
   newQuery() {
-    const q = this.orm.knex(this.tableName());
+    return this.attachOrmNSToQuery(
+      this.orm.knex(this.tableName())
+    );
+  }
 
-    // used in data retrieval and persistence flow for various things
+  /**
+   * attach _orm to knex query with required flags
+   * @param  {knex.query} q knex query
+   * @return {knex.query} query with namespace
+   */
+  attachOrmNSToQuery(q) {
     q._orm = {
       // used by cache processor
       cacheEnabled: false,
@@ -293,7 +302,8 @@ export default class Table {
       return this.whereIn(this.key(), val);
     } else {
       if (isArray(this.key())) {
-        if (isPlainObject(val)) {
+        if (isUsableObject(val)) {
+          val = toPlainObject(val);
           return this.where(this.key().reduce((conditions, k) => {
             return assign(conditions, {[k]: val[k]});
           }, {}));
@@ -324,7 +334,8 @@ export default class Table {
       return this.orWhereIn(this.key(), val);
     } else {
       if (isArray(this.key())) {
-        if (isPlainObject(val)) {
+        if (isUsableObject(val)) {
+          val = toPlainObject(val);
           return this.orWhere(this.key().reduce((conditions, k) => {
             return assign(conditions, {[k]: val[k]});
           }, {}));
@@ -345,8 +356,8 @@ export default class Table {
    * @return {this} current instance
    */
   where(...args) {
-    if (args.length === 1 && isPlainObject(args[0])) {
-      const [conditions] = args;
+    if (args.length === 1 && isUsableObject(args[0])) {
+      const conditions = toPlainObject(args[0]);
 
       return Object.keys(conditions).reduce(
         (table, field) => table.where(field, '=', conditions[field]),
@@ -380,8 +391,8 @@ export default class Table {
    * @return {this} current instance
    */
   orWhere(...args) {
-    if (args.length === 1 && isPlainObject(args[0])) {
-      const [conditions] = args;
+    if (args.length === 1 && isUsableObject(args[0])) {
+      const conditions = toPlainObject(args[0]);
 
       return Object.keys(conditions).reduce(
         (table, field) => table.orWhere(field, '=', conditions[field]),
@@ -415,8 +426,8 @@ export default class Table {
    * @return {this} current instance
    */
   whereNot(...args) {
-    if (args.length === 1 && isPlainObject(args[0])) {
-      const [conditions] = args;
+    if (args.length === 1 && isUsableObject(args[0])) {
+      const conditions = toPlainObject(args[0]);
 
       return Object.keys(conditions).reduce(
         (table, field) => table.whereNot(field, '=', conditions[field]),
@@ -450,8 +461,8 @@ export default class Table {
    * @return {this} current instance
    */
   orWhereNot(...args) {
-    if (args.length === 1 && isPlainObject(args[0])) {
-      const [conditions] = args;
+    if (args.length === 1 && isUsableObject(args[0])) {
+      const conditions = toPlainObject(args[0]);
 
       return Object.keys(conditions).reduce(
         (table, field) => table.orWhereNot(field, '=', conditions[field]),
@@ -688,7 +699,7 @@ export default class Table {
 
     const [limit, offset] = [perPage, ((page - 1) * perPage)];
 
-    return this.scope((q) => q.limit(limit).offset(offset), 'forPage');
+    return this.limit(limit).offset(offset);
   }
 
   /**
@@ -716,16 +727,17 @@ export default class Table {
    * @return {this} current instance
    */
   orderBy(field, direction) {
-    return this.scope((q) => q.orderBy(field, direction), 'orderBy');
+    return this.scope((q) => q.orderBy(this.c(field), direction), 'orderBy');
   }
 
   /**
    * apply a scope which sets an orderByRaw on the query
    * @param  {string} sql sql for the order by
+   * @param {array} bindings bindings for orderByRaw
    * @return {this} current instance
    */
-  orderByRaw(sql) {
-    return this.scope((q) => q.orderByRaw(sql), 'orderByRaw');
+  orderByRaw(sql, bindings) {
+    return this.scope((q) => q.orderByRaw(sql, bindings), 'orderByRaw');
   }
 
   /**
@@ -734,16 +746,17 @@ export default class Table {
    * @return {this} current instance
    */
   groupBy(...args) {
-    return this.scope((q) => q.groupBy(...args), 'groupBy');
+    return this.scope((q) => q.groupBy(...this.c(args)), 'groupBy');
   }
 
   /**
    * apply a scope which sets a groupByRaw on the query
    * @param  {string} sql sql for the group by
+   * @param {array} bindings bindings for groupBy
    * @return {this} current instance
    */
-  groupByRaw(sql) {
-    return this.scope((q) => q.groupByRaw(sql), 'groupByRaw');
+  groupByRaw(sql, bindings) {
+    return this.scope((q) => q.groupByRaw(sql, bindings), 'groupByRaw');
   }
 
   /**
@@ -819,8 +832,8 @@ export default class Table {
     if (isArray(eagerLoads)) {
       return this.parseEagerLoads(
         eagerLoads.map((eagerLoad) => {
-          if (isPlainObject(eagerLoad)) {
-            return eagerLoad;
+          if (isUsableObject(eagerLoad)) {
+            return toPlainObject(eagerLoad);
           } else {
             return {[eagerLoad]: placeHolderConstraint};
           }
@@ -923,7 +936,7 @@ export default class Table {
    * @return {mixed} the processed result
    */
   processResult(result, options) {
-    const {count} = isPlainObject(options) ? options : {count: false};
+    const {count} = isUsableObject(options) ? toPlainObject(options) : {count: false};
 
     if (count === true) {
       // result[0].count is how knex gives count query results
@@ -931,8 +944,9 @@ export default class Table {
     } else if (isArray(result)) {
       // processing an array of response
       return this.processors.collection(result.map((row) => this.processResult(row, {count})));
-    } else if (isPlainObject(result)) {
+    } else if (isUsableObject(result)) {
       // processing individual model results
+      result = toPlainObject(result);
       return this.processors.model(Object.keys(result).reduce((processed, key) => {
         if (key.indexOf('.') > -1) {
           if (key.indexOf(this.tableName()) === 0) {
@@ -941,9 +955,9 @@ export default class Table {
             return assign(processed, {[key.split('.').join('__')]: result[key]});
           }
         } else {
-          return assign(processed, {key: result[key]});
+          return assign(processed, {[key]: result[key]});
         }
-      }, {}));
+      }, {__table: this.tableName()}));
     } else {
       // processing other random values
       return result;
@@ -1011,7 +1025,9 @@ export default class Table {
    * @return {Promise} promise which resolves the result
    */
   first() {
-    return this.limit(1).all().then(([model]) => model);
+    return this.limit(1).all().then((result) => (
+      result.length > 0 ? result[0] : null
+    ));
   }
 
   /**
@@ -1020,7 +1036,7 @@ export default class Table {
    * @return {Promise} promise which resolves the result
    */
   all(options) {
-    const {withDuplicates} = isPlainObject(options) ? options : {withDuplicates: false};
+    const {withDuplicates} = isUsableObject(options) ? toPlainObject(options) : {withDuplicates: false};
 
     const q = this.query();
 
@@ -1044,16 +1060,18 @@ export default class Table {
    * @return {int} count of the result set
    */
   count(options) {
-    const {countDuplicates} = isPlainObject(options) ? options : {countDuplicates: false};
+    const {countDuplicates} = isUsableObject(options) ? toPlainObject(options) : {countDuplicates: false};
 
-    const q = this.orm.knex.count('*').from((q) => {
-      q.from(this.tableName());
-      this.scopeTrack.apply(q);
-      if (countDuplicates !== true) {
-        q.distinct();
-      }
-      q.as('t1');
-    });
+    const q = this.attachOrmNSToQuery(
+      this.orm.knex.count('*').from((q) => {
+        q.from(this.tableName());
+        this.scopeTrack.apply(q);
+        if (countDuplicates !== true) {
+          q.distinct();
+        }
+        q.as('t1');
+      })
+    );
 
     return this.uncacheQueryIfNeeded(q).then(() => {
       return this.fetchResultsFromCacheOrDatabase(q);
@@ -1071,7 +1089,7 @@ export default class Table {
     switch (args.length) {
       case 0: return this.first();
       case 1: return ((val) => {
-        if (isPlainObject(val)) {
+        if (isUsableObject(val)) {
           return this.where(val).first();
         } else {
           return this.whereKey(val).first();
@@ -1090,7 +1108,7 @@ export default class Table {
     switch (args.length) {
       case 0: return this.query().del();
       case 1: return ((condition) => {
-        if (isPlainObject(condition)) {
+        if (isUsableObject(condition)) {
           return this.where(condition).del();
         } else {
           // else we are deleting based on a key
@@ -1174,8 +1192,8 @@ export default class Table {
       return assign(condition, {[part]: uuid.v4()});
     }, {});
 
-    return this.where(newKey).first().then((model) => {
-      if (isPlainObject(model)) {
+    return this.newQuery().where(newKey).first().then((model) => {
+      if (isUsableObject(model)) {
         return this.genKeyVal();
       } else {
         return newKey;
@@ -1261,25 +1279,40 @@ export default class Table {
       // against it
       const [keyCondition, values] = args;
       return this.whereKey(keyCondition).update(values);
-    } else {
-      // if we reach here then we can safely say that an object/array has
+    } else if (args.length === 1) {
+      // if we reach here then we can safely say that an object has
       // been provided to the update call
-      return this.updateModel(...args);
+      return this.rawUpdate(args[0], {returning: true});
     }
   }
 
-  updateModel(model) {
+  /**
+   * Perform an update operation, can be used for batch updates.
+   * @param  {object}  values values to be used to perform an update
+   * @param  {Boolean} options.returning whether the results should be returned
+   * @return {Promise} promise for when update has finished
+   */
+  rawUpdate(values, {returning=false}) {
     const opFlags = {op: 'update'};
 
     return this.columns().then((columns) => {
-      model = this.attachTimestampToValues(
-        this.pickColumnValues(columns, model, opFlags),
+      values = this.attachTimestampToValues(
+        this.pickColumnValues(columns, values, opFlags),
         opFlags
       );
 
-      return this.query().returning('*')
-        .update(model)
-        .then(([model]) => model);
+      if (returning === true) {
+        // we return the first object when returning is true
+        // use update method uses this, useful for handpicked updates
+        // which is mostly the case with business logic
+        return this.query().returning('*').update(values)
+          .then(([model]) => model);
+      } else {
+        // use this for batch updates. we don't return anything
+        // in batch updates. if you want returning batch updates,
+        // just use knex!
+        return this.query().update(values);
+      }
     });
   }
 
@@ -1293,7 +1326,7 @@ export default class Table {
   hasOne(related, foreignKey, key) {
     key = key || this.key();
 
-    return new HasOne(this.fork(), this.table(related), foreignKey, key);
+    return new HasOne(this, this.table(related), foreignKey, key);
   }
 
   /**
@@ -1306,7 +1339,7 @@ export default class Table {
   hasMany(related, foreignKey, key) {
     key = key || this.key();
 
-    return new HasMany(this.fork(), this.table(related), foreignKey, key);
+    return new HasMany(this, this.table(related), foreignKey, key);
   }
 
   /**
@@ -1319,7 +1352,7 @@ export default class Table {
    */
   hasManyThrough(related, through, firstKey, secondKey) {
     return new HasManyThrough(
-      this.fork(), this.table(related), this.table(through), firstKey, secondKey
+      this, this.table(related), this.table(through), firstKey, secondKey
     );
   }
 
@@ -1334,7 +1367,7 @@ export default class Table {
     related = this.table(related);
     otherKey = otherKey || related.key();
 
-    return new BelongsTo(this.fork(), related, foreignKey, otherKey);
+    return new BelongsTo(this, related, foreignKey, otherKey);
   }
 
   /**
@@ -1343,10 +1376,14 @@ export default class Table {
    * @param  {string} pivot pivot table name
    * @param  {string} foreignKey foreign-key on this table
    * @param  {string} otherKey other-key on this table
+   * @param  {function} joiner extra join conditions
    * @return {BelongsToMany} BelongsToMany relation instance
    */
-  belongsToMany(related, pivot, foreignKey, otherKey) {
-    return new BelongsToMany(this.fork(), this.table(related), this.table(pivot), foreignKey, otherKey);
+  belongsToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
+    return new BelongsToMany(
+      this, this.table(related), this.table(pivot), foreignKey, otherKey,
+      joiner
+    );
   }
 
   /**
@@ -1358,7 +1395,7 @@ export default class Table {
   morphOne(related, inverse) {
     related = this.table(related);
 
-    return new MorphOne(this.fork(), related, related[inverse]());
+    return new MorphOne(this, related, related[inverse]());
   }
 
   /**
@@ -1370,7 +1407,7 @@ export default class Table {
   morphMany(related, inverse) {
     related = this.table(related);
 
-    return new MorphMany(this.fork(), related, related[inverse]());
+    return new MorphMany(this, related, related[inverse]());
   }
 
   /**
@@ -1383,6 +1420,6 @@ export default class Table {
   morphTo(tables, typeField, foreignKey) {
     tables = tables.map((t) => this.table(t));
 
-    return new MorphTo(this.fork(), tables, typeField, foreignKey);
+    return new MorphTo(this, tables, typeField, foreignKey);
   }
 }

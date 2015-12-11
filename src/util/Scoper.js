@@ -57,13 +57,26 @@ export default class Scoper {
     return this.addScopes([{key, scope}]);
   }
 
+  merge(scoper) {
+    Array.from(scoper.scopes.keys()).forEach((k) => {
+      this.scopes.set(k, scoper.scopes.get(k));
+    });
+
+    return this;
+  }
+
   run(table, params) {
     const actionableParams = this.actionableParams(params);
 
     return actionableParams
       .filter(({key}) => this.scopes.has(key))
       .reduce((t, {key, val}) => {
-        this.scopes.get(key).bind(this)(t, val, key);
+        const scope = this.scopes.get(key);
+        if (scope instanceof Scoper) {
+          scope.run(t, val, key);
+        } else {
+          scope.bind(this)(t, val, key);
+        }
         return t;
       }, table)
     ;

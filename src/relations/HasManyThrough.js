@@ -3,21 +3,26 @@ import {assign, isArray} from 'lodash';
 import Relation from './Relation';
 
 export default class HasManyThrough extends Relation {
-  constructor(fromTable, toTable, throughTable, firstKey, secondKey) {
-    super();
-    assign(this, {fromTable, toTable, throughTable, firstKey, secondKey});
+  constructor(ownerTable, toTable, throughTable, firstKey, secondKey, joiner=(() => {})) {
+    super(ownerTable);
+    assign(this, {fromTable: ownerTable.fork(), toTable, throughTable, firstKey, secondKey});
 
-    this.throughFields = [firstKey, secondKey];
+    this.throughFields = [throughTable.key(), firstKey];
 
     this.constrain((t) => {
       t.scope((q) => {
-        q.join(throughTable.tableName(), throughTable.key(), '=', toTable.c(secondKey));
+        q.join(
+          this.throughTable.tableName(), (j) => {
+            j.on(this.throughTable.keyCol(), '=', this.toTable.c(secondKey));
+            joiner(j);
+          }
+        );
       });
     });
   }
 
   withThrough(...throughFields) {
-    this.throughFields = throughFields.concat([this.firstKey, this.secondKey]);
+    this.throughFields = throughFields.concat([this.throughTable.key(), this.firstKey]);
     return this;
   }
 
@@ -86,14 +91,14 @@ export default class HasManyThrough extends Relation {
     }));
   }
 
-  join(tableContext, joiner=(() => {}), label=null) {
+  join(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {});
     const {throughTable, toTable, secondKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return this.joinThrough(tableContext).joint((q) => {
+      return this.joinThrough().joint((q) => {
         q.join(toTable.tableName(), (j) => {
           j.on(throughTable.keyCol(), '=', toTable.c(secondKey));
           joiner(j);
@@ -102,29 +107,30 @@ export default class HasManyThrough extends Relation {
     }
   }
 
-  joinThrough(tableContext, joiner=(() => {}), label=null) {
-    label = this.jointLabel(label, {});
+  joinThrough(joiner=(() => {}), label=null) {
+    label = this.throughJointLabel(label, {});
     const {fromTable, throughTable, firstKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.join(throughTable.tableName(), (j) => {
           j.on(fromTable.keyCol(), '=', throughTable.c(firstKey));
+          joiner(j);
         });
       }, label);
     }
   }
 
-  leftJoin(tableContext, joiner=(() => {}), label=null) {
+  leftJoin(joiner=(() => {}), label=null) {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {throughTable, toTable, secondKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return this.leftJoinThrough(tableContext).joint((q) => {
+      return this.leftJoinThrough().joint((q) => {
         q.leftJoin(toTable.tableName(), (j) => {
           j.on(throughTable.keyCol(), '=', toTable.c(secondKey));
           joiner(j);
@@ -133,16 +139,17 @@ export default class HasManyThrough extends Relation {
     }
   }
 
-  leftJoinThrough(tableContext, joiner=(() => {}), label=null) {
-    label = this.jointLabel(label, {isLeftJoin: true});
+  leftJoinThrough(joiner=(() => {}), label=null) {
+    label = this.throughJointLabel(label, {isLeftJoin: true});
     const {fromTable, throughTable, firstKey} = this;
 
-    if (tableContext.hasJoint(label)) {
-      return tableContext;
+    if (this.ownerTable.hasJoint(label)) {
+      return this.ownerTable;
     } else {
-      return tableContext.joint((q) => {
+      return this.ownerTable.joint((q) => {
         q.leftJoin(throughTable.tableName(), (j) => {
           j.on(fromTable.keyCol(), '=', throughTable.c(firstKey));
+          joiner(j);
         });
       }, label);
     }
