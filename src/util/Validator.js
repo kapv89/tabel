@@ -93,7 +93,7 @@ export default class Validator {
         return null;
       } else {
         return errorMessages.reduce((errors, msg, index) => {
-          return assign({
+          return assign(errors, {
             [keys[index]]: isArray(msg) ? msg : (
               isUsableObject(msg) ? toPlainObject(msg) : [msg]
             )
