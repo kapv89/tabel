@@ -80,7 +80,7 @@ export default class Validator {
   }
 
   findErrors(input={}) {
-    const keys = Array.from(this.validation.keys());
+    const keys = Array.from(this.validations.keys());
 
     return Promise.all(
       keys.map((k) => this.validations.get(k).bind(this)(input[k], input, k))
