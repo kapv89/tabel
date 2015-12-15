@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "knex": "^0.9.0",
-    "kredis": "file:../kredis",
+    "kredis": "bitbucket:kapv89/kredis",
     "lodash": "^3.10.1",
     "md5": "^2.0.0",
     "uuid": "^2.0.1"
