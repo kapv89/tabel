@@ -1,5 +1,6 @@
 import {assign} from 'lodash';
 
+import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 
 export default class BelongsTo extends Relation {
@@ -41,7 +42,9 @@ export default class BelongsTo extends Relation {
       {}
     );
 
-    return fromModels.map((m) => assign(m, {[this.relationName]: keyDict[m[this.foreignKey]]}));
+    return fromModels.map((m) => assign(m, {
+      [this.relationName]: isUsableObject(keyDict[m[this.foreignKey]]) ? keyDict[m[this.foreignKey]] : null
+    }));
   }
 
   associate(...args) {

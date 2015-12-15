@@ -1,5 +1,6 @@
 import {assign} from 'lodash';
 
+import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 import MorphTo from './Relation';
 
@@ -48,7 +49,7 @@ export default class MorphOne extends Relation {
     }, {});
 
     return fromModels.map((m) => assign(m, {
-      [relationName]: keyDict[m[fromTable.key()]]
+      [relationName]: isUsableObject(keyDict[m[fromTable.key()]]) ? keyDict[m[fromTable.key()]] : null
     }));
   }
 

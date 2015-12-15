@@ -61,7 +61,9 @@ export default class MorphTo extends Relation {
 
     return fromModels.map((m) => {
       if (m[typeField] in tableKeyDict && m[foreignKey] in tableKeyDict[m[typeField]]) {
-        return assign(m, {[relationName]: tableKeyDict[m[typeField]][m[foreignKey]]});
+        return assign(m, {
+          [relationName]: tableKeyDict[m[typeField]][m[foreignKey]]
+        });
       } else {
         return m;
       }

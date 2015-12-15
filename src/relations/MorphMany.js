@@ -54,7 +54,8 @@ export default class MorphMany extends Relation {
     }, {});
 
     return fromModels.map((m) => assign(m, {
-      [relationName]: keyDict[m[fromTable.key()]]
+      [relationName]: isArray(keyDict[m[fromTable.key()]]) ?
+        keyDict[m[fromTable.key()]] : []
     }));
   }
 

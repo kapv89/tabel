@@ -1,5 +1,6 @@
 import {assign} from 'lodash';
 
+import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 
 export default class HasOne extends Relation {
@@ -39,7 +40,7 @@ export default class HasOne extends Relation {
     }, {});
 
     return fromModels.map((m) => assign(m, {
-      [relationName]: keyDict[m[key]]
+      [relationName]: isUsableObject(keyDict[m[key]]) ? keyDict[m[key]] : null
     }));
   }
 

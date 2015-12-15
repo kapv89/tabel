@@ -45,7 +45,7 @@ export default class HasMany extends Relation {
     }, {});
 
     return fromModels.map((m) => assign(m, {
-      [relationName]: keyDict[m[key]]
+      [relationName]: isArray(keyDict[m[key]]) ? keyDict[m[key]] : []
     }));
   }
 
