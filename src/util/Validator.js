@@ -83,19 +83,32 @@ export default class Validator {
     const keys = Array.from(this.validations.keys());
 
     return Promise.all(
-      keys.map((k) => this.validations.get(k).bind(this)(input[k], input, k))
+      keys.map((k) => {
+        const validated = this.validations.get(k).bind(this)(input[k], input, k);
+        if (validated instanceof Promise) {
+          return validated.then((errors) => {
+            return {key: k, errors};
+          });
+        } else if (validated instanceof Validator) {
+          return validated.findErrors(input[k]).then((errors) => {
+            return {key: k, errors};
+          });
+        } else {
+          return {key: k, errors: validated};
+        }
+      })
     )
     .then((errorMessages) => errorMessages.filter((msg) => {
-      return isArray(msg) ? msg.length > 0 : !!msg;
+      return isArray(msg.errors) ? msg.errors.length > 0 : !!msg.errors;
     }))
     .then((errorMessages) => {
       if (errorMessages.length === 0) {
         return null;
       } else {
-        return errorMessages.reduce((errors, msg, index) => {
-          return assign(errors, {
-            [keys[index]]: isArray(msg) ? msg : (
-              isUsableObject(msg) ? toPlainObject(msg) : [msg]
+        return errorMessages.reduce((allErrors, {key, errors}) => {
+          return assign(allErrors, {
+            [key]: isArray(errors) ? errors : (
+              isUsableObject(errors) ? toPlainObject(errors) : [errors]
             )
           });
         }, {});

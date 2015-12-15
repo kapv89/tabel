@@ -79,7 +79,16 @@ export default class Transformer {
     const keys = Object.keys(input).filter((key) => this.transformations.has(key));
 
     return Promise.all(
-      keys.map((key) => this.transformations.get(key).bind(this)(input[key], input, key))
+      keys.map((key) => {
+        const transformed = this.transformations.get(key).bind(this)(input[key], input, key);
+        if (transformed instanceof Promise) {
+          return transformed.then((val) => val);
+        } else if (transformed instanceof Transformer) {
+          return transformed.run(input[key]);
+        } else {
+          return transformed;
+        }
+      })
     )
     .then((outValues) => outValues.reduce((output, value, index) => {
       return assign(output, {[keys[index]]: value});
