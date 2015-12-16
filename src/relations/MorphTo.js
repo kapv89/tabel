@@ -65,7 +65,7 @@ export default class MorphTo extends Relation {
           [relationName]: tableKeyDict[m[typeField]][m[foreignKey]]
         });
       } else {
-        return m;
+        return assign(m, {[relationName]: null});
       }
     });
   }
