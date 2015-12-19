@@ -94,11 +94,15 @@ export default class Orm {
   // here, we load the columns of all the tables that have been
   // defined via the orm, and return a promise on completion
   // cos, if people wanna do that before starting the server
-  // let em do that
+  // let em do that. we also call ioredis.connect if its available
   load() {
-    return Promise.all(
-      Array.from(this.tables.keys).map((name) => this.table(name).load())
-    );
+    const promises = Array.from(this.tables.keys).map((name) => this.table(name).load());
+
+    if (this.cache) {
+      promises.push(this.cache.connect());
+    }
+
+    return Promise.all(promises);
   }
 
   // get a tableClass
@@ -108,6 +112,10 @@ export default class Orm {
 
   // get a table object
   table(tableName, trx=null) {
+    if (! this.tables.has(tableName)) {
+      throw new Error(`trying to access invalid table ${tableName}`);
+    }
+
     const tbl = this.tables.get(tableName).fork();
 
     if (trx !== null) {
