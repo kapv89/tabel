@@ -42,15 +42,10 @@ import {assign, isArray, toPlainObject} from 'lodash';
 import isUsableObject from '../isUsableObject';
 
 export default class Validator {
-  constructor(container, validations=[]) {
-    this.container = container;
+  constructor(validations=[]) {
     this.validations = new Map();
 
     this.addValidations(validations);
-  }
-
-  validator(name) {
-    return this.container.validator(name);
   }
 
   addValidations(validations=[]) {

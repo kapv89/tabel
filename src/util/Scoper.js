@@ -30,15 +30,10 @@
 import {isArray, isObject} from 'lodash';
 
 export default class Scoper {
-  constructor(container, scopes=[]) {
-    this.container = container;
+  constructor(scopes=[]) {
     this.scopes = new Map();
 
     this.addScopes(scopes);
-  }
-
-  scoper(name) {
-    return this.container.scoper(name);
   }
 
   addScopes(scopes=[]) {

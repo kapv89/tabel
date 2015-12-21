@@ -15,7 +15,7 @@ export default class Util {
   }
 
   newScoper(scopes) {
-    return new Scoper(this, scopes);
+    return new Scoper(scopes);
   }
 
   defineScoper(name, scopes) {
@@ -28,7 +28,7 @@ export default class Util {
   }
 
   newTransformer(transformations) {
-    return new Transformer(this, transformations);
+    return new Transformer(transformations);
   }
 
   defineTransformer(name, transformations) {
@@ -41,7 +41,7 @@ export default class Util {
   }
 
   newValidator(validations) {
-    return new Validator(this, validations);
+    return new Validator(validations);
   }
 
   defineValidator(name, validations) {

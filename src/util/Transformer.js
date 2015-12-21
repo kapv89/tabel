@@ -38,15 +38,10 @@ import {assign, toPlainObject} from 'lodash';
 import isUsableObject from '../isUsableObject';
 
 export default class Transformer {
-  constructor(container, transformations=[]) {
-    this.container = container;
+  constructor(transformations=[]) {
     this.transformations = new Map();
 
     this.addTransformations(transformations);
-  }
-
-  transformer(name) {
-    return this.container.transformer(name);
   }
 
   addTransformations(transformations=[]) {

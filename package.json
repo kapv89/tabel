@@ -20,6 +20,10 @@
   },
   "devDependencies": {
     "babel": "^5.8.34",
+    "babel-eslint": "^4.1.6",
+    "eslint": "^1.10.3",
+    "eslint-plugin-babel": "^3.0.0",
+    "eslint-plugin-react": "^3.12.0",
     "faker": "^3.0.1",
     "pg": "^4.4.3"
   }
