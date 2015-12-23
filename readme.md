@@ -11,13 +11,14 @@
 - [Philosophy](#philosophy)
 - [Getting Started](#getting-started)
 - [Table Declarations](#table-declarations)
-- [Scopes and Joints and Forking)](#scopes-and-joints-and-forking)
-- [Relationships](#relationships)
 - [Query Building](#query-building)
+- [Scopes and Joints and Forking](#scopes-and-joints-and-forking)
+- [Relationships](#relationships)
 - [Eager Loading](#eager-loading)
 - [Caching](#caching)
 - [Hooks](#hooks)
 - [Migrations](#migrations)
+- [Extending Table Classes](#extending-table-classes)
 - [Example Projects](#examples)
 
 ### Philosophy
@@ -172,3 +173,22 @@ orm.defineTable({
   methods: {}
 });
 ```
+
+### Query Building
+Query building in **Tabel** is a very thin layer over [**knex.js**](http://knexjs.org)
+
+### Scopes and Joints and Forking
+
+### Relationships
+
+### Eager Loading
+
+### Caching
+
+### Hooks?
+
+### Migrations
+
+### Extending Table Classes
+
+### Example Projects
