@@ -12,6 +12,10 @@ export default class Track {
     return i > -1 && this.scopes[i].isJoint;
   }
 
+  hasScope(label) {
+    return this.scopes.map((scope) => scope.label).indexOf(label) > -1;
+  }
+
   push(scope) {
     if (scope.isJoint && this.hasJoint(scope.label)) {
       return this;

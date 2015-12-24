@@ -121,9 +121,6 @@ export default class Table {
       cacheLifetime: null,
       destroyCache: false,
 
-      // used to select columns and all
-      columns: this.c('*'),
-
       // transaction being used on the query
       trx: null,
 
@@ -145,11 +142,18 @@ export default class Table {
     // apply the scopeTrack on the query
     this.scopeTrack.apply(q);
 
-    if (opts.count === true) {
+    if (this.scopeTrack.hasScope('select')) {
       return q;
     } else {
-      return q.select(q._orm.columns);
+      return q.select(this.c('*'));
     }
+
+    //
+    // if (opts.count === true) {
+    //   return q;
+    // } else {
+    //   return q.select(q._orm.columns);
+    // }
   }
 
   /**
@@ -786,7 +790,7 @@ export default class Table {
    * @return {this} current instance
    */
   select(cols) {
-    return this.scope((q) => { q._orm.columns = this.c(cols); }, 'select');
+    return this.scope((q) => { q.select(this.c(cols)); }, 'select');
   }
 
   /**
@@ -803,7 +807,7 @@ export default class Table {
    * @return {this} current instance
    */
   uncache() {
-    return this.scope((q) => { q._orm.destroyCache = false; }, 'uncache');
+    return this.scope((q) => { q._orm.destroyCache = true; }, 'uncache');
   }
 
   /**
@@ -1065,10 +1069,17 @@ export default class Table {
     const q = this.attachOrmNSToQuery(
       this.orm.knex.count('*').from((q) => {
         q.from(this.tableName());
+
         this.scopeTrack.apply(q);
+
+        if (! this.scopeTrack.hasScope('select')) {
+          q.select(this.c('*'));
+        }
+
         if (countDuplicates !== true) {
           q.distinct();
         }
+
         q.as('t1');
       })
     );
