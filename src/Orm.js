@@ -74,8 +74,9 @@ export default class Orm {
           return result;
         });
       }).catch((e) => {
-        t.rollback();
-        throw e;
+        t.rollback().then(() => {
+          throw e;
+        });
       });
     }).then(() => outerResult);
   }
