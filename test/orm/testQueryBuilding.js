@@ -7,7 +7,7 @@ import {range} from 'lodash';
 
 export default async function testQueryBuilding(assert, orm) {
   const knex = orm.knex;
-  const {table} = orm.exports;
+  const {table, raw} = orm.exports;
   console.log('testing query-building');
 
   const [
@@ -271,6 +271,12 @@ export default async function testQueryBuilding(assert, orm) {
         .limit(table('photos').props.perPage)
         .offset(table('photos').props.perPage * (2-1))
         .toString()
+    );
+
+    console.log(
+      table('posts').select(['*', raw(`length('sasasd') as test`)])
+        .whereRaw('title like ?', ['%foo%'])
+        .query().toString()
     );
   })();
 
