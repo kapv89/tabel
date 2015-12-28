@@ -19,13 +19,6 @@
     // will be assigned in this order only
   },
 
-  // used to process model and collection results fetched from the db
-  // override as you need to
-  processors: {
-    model(row) { return row; },
-    collection(rows) { return rows; }
-  },
-
   // predefined scopes on the table
   scopes: {},
   // predefined joints on the table
@@ -44,6 +37,7 @@ import {
   isString,
   isDate,
   isNumber,
+  isFunction,
   assign,
   merge,
   toPlainObject
@@ -57,7 +51,7 @@ import HasOne from './relations/HasOne';
 import HasMany from './relations/HasMany';
 import HasManyThrough from './relations/HasManyThrough';
 import BelongsTo from './relations/BelongsTo';
-import BelongsToMany from './relations/BelongsToMany';
+import ManyToMany from './relations/ManyToMany';
 import MorphOne from './relations/MorphOne';
 import MorphMany from './relations/MorphMany';
 import MorphTo from './relations/MorphTo';
@@ -136,7 +130,7 @@ export default class Table {
    * the counting function sets columns it counts on smartly
    * @return {knex.query} table's query object with scopeTrack applied
    */
-  query(opts={}) {
+  query() {
     const q = this.newQuery();
 
     // apply the scopeTrack on the query
@@ -785,12 +779,50 @@ export default class Table {
   }
 
   /**
+   * apply a scope which sets a distinct clause on the query
+   * @return {this} current instance
+   */
+  distinct() {
+    return this.scope((q) => q.distinct(), 'distinct');
+  }
+
+  /**
    * apply a scope to select some columns
    * @param  {mixed} cols the columns to select
    * @return {this} current instance
    */
   select(cols) {
     return this.scope((q) => { q.select(this.c(cols)); }, 'select');
+  }
+
+  /**
+   * apply a scope to join a table with this Table
+   * @param {string} tableName to join
+   * @param {...mixed} args join conditions
+   * @return {this} current instance
+   */
+  join(tableName, ...args) {
+    if (isFunction(args[0])) {
+      const joiner = args[0];
+      return this.joint((q) => { q.join(tableName, joiner); }, `join${tableName}${md5(joiner.toString())}`);
+    } else {
+      return this.joint((q) => { q.join(tableName, ...args); }, `join${tableName}${md5(args.toString())}`);
+    }
+  }
+
+  /**
+   * apply a scope to leftJoin a table with this Table
+   * @param {string} tableName to join
+   * @param {...mixed} args join conditions
+   * @return {this} current instance
+   */
+  leftJoin(tableName, ...args) {
+    if (isFunction(args[0])) {
+      const joiner = args[0];
+      return this.joint((q) => { q.leftJoin(tableName, joiner); }, `join${tableName}${md5(joiner.toString())}`);
+    } else {
+      return this.joint((q) => { q.leftJoin(tableName, ...args); }, `join${tableName}${md5(args.toString())}`);
+    }
   }
 
   /**
@@ -812,10 +844,10 @@ export default class Table {
 
   /**
    * add a scope to eager-load various relations
-   * @param  {mixed} eagerLoads relations to eager-load with constraints, {} or []
+   * @param  {...mixed} eagerLoads relations to eager-load with constraints
    * @return {this} current instance
    */
-  eagerLoad(eagerLoads) {
+  eagerLoad(...eagerLoads) {
     eagerLoads = this.parseEagerLoads(eagerLoads);
     return this.scope((q) => { assign(q._orm.eagerLoads, eagerLoads); }, 'eagerLoad');
   }
@@ -947,11 +979,11 @@ export default class Table {
       return parseInt(result[0].count, 10);
     } else if (isArray(result)) {
       // processing an array of response
-      return this.processors.collection(result.map((row) => this.processResult(row, {count})));
+      return result.map((row) => this.processResult(row, {count}));
     } else if (isUsableObject(result)) {
       // processing individual model results
       result = toPlainObject(result);
-      return this.processors.model(Object.keys(result).reduce((processed, key) => {
+      return Object.keys(result).reduce((processed, key) => {
         if (key.indexOf('.') > -1) {
           if (key.indexOf(this.tableName()) === 0) {
             return assign(processed, {[key.split('.')[1]]: result[key]});
@@ -961,7 +993,7 @@ export default class Table {
         } else {
           return assign(processed, {[key]: result[key]});
         }
-      }, {__table: this.tableName()}));
+      }, {__table: this.tableName()});
     } else {
       // processing other random values
       return result;
@@ -1026,27 +1058,28 @@ export default class Table {
 
   /**
    * get the first row for the scoped query
+   * @param  {...mixed} args conditions for scoping the query
    * @return {Promise} promise which resolves the result
    */
-  first() {
-    return this.limit(1).all().then((result) => (
+  first(...args) {
+    return this.limit(1).all(...args).then((result) => (
       result.length > 0 ? result[0] : null
     ));
   }
 
   /**
-   * get all distinct rows from the scoped query
-   * @param  {options} options whether allow dups in all
+   * get all rows from the scoped query
+   * @param  {...mixed} args conditions for scoping the query
    * @return {Promise} promise which resolves the result
    */
-  all(options) {
-    const {withDuplicates} = isUsableObject(options) ? toPlainObject(options) : {withDuplicates: false};
+  all(...args) {
+    if (args.length === 1) {
+      return this.where(args[0]).count();
+    } else if (args.length >= 2) {
+      return this.where(...args).count();
+    }
 
     const q = this.query();
-
-    if (withDuplicates !== true) {
-      q.distinct();
-    }
 
     return this.uncacheQueryIfNeeded(q).then(() => {
       return this.fetchResultsFromCacheOrDatabase(q);
@@ -1060,11 +1093,15 @@ export default class Table {
   /**
    * get count of the scoped result set. works well
    * even when you have groupBy etc in your queries
-   * @param {object} options count options
+   * @param  {...mixed} args conditions for scoping the query
    * @return {int} count of the result set
    */
-  count(options) {
-    const {countDuplicates} = isUsableObject(options) ? toPlainObject(options) : {countDuplicates: false};
+  count(...args) {
+    if (args.length === 1) {
+      return this.where(args[0]).count();
+    } else if (args.length >= 2) {
+      return this.where(...args).count();
+    }
 
     const q = this.attachOrmNSToQuery(
       this.orm.knex.count('*').from((q) => {
@@ -1074,10 +1111,6 @@ export default class Table {
 
         if (! this.scopeTrack.hasScope('select')) {
           q.select(this.c('*'));
-        }
-
-        if (countDuplicates !== true) {
-          q.distinct();
         }
 
         q.as('t1');
@@ -1289,11 +1322,11 @@ export default class Table {
       // that means we have been provided a key, and values to update
       // against it
       const [keyCondition, values] = args;
-      return this.whereKey(keyCondition).update(values);
+      return this.whereKey(keyCondition).rawUpdate(values, {returning: true});
     } else if (args.length === 1) {
       // if we reach here then we can safely say that an object has
       // been provided to the update call
-      return this.rawUpdate(args[0], {returning: true});
+      return this.rawUpdate(args[0], {});
     }
   }
 
@@ -1382,16 +1415,32 @@ export default class Table {
   }
 
   /**
-   * get a new BelongsToMany relation
+   * get a new ManyToMany relation
    * @param  {string} related related table name
    * @param  {string} pivot pivot table name
    * @param  {string} foreignKey foreign-key on this table
    * @param  {string} otherKey other-key on this table
    * @param  {function} joiner extra join conditions
-   * @return {BelongsToMany} BelongsToMany relation instance
+   * @return {ManyToMany} BelongsToMany relation instance
+   */
+  manyToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
+    return new ManyToMany(
+      this, this.table(related), this.table(pivot), foreignKey, otherKey,
+      joiner
+    );
+  }
+
+  /**
+   * get a new ManyToMany relation
+   * @param  {string} related related table name
+   * @param  {string} pivot pivot table name
+   * @param  {string} foreignKey foreign-key on this table
+   * @param  {string} otherKey other-key on this table
+   * @param  {function} joiner extra join conditions
+   * @return {ManyToMany} BelongsToMany relation instance
    */
   belongsToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
-    return new BelongsToMany(
+    return new ManyToMany(
       this, this.table(related), this.table(pivot), foreignKey, otherKey,
       joiner
     );

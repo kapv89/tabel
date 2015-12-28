@@ -5,6 +5,7 @@
   "main": "lib/Orm.js",
   "scripts": {
     "test": "babel-node --stage 1 test/orm/main.js",
+    "test:collisions": "babel-node --stage 1 test/collisions/main.js",
     "build": "npm run clean && babel --stage 1 -D src/ --out-dir lib/",
     "watch": "npm run clean && babel --stage 1 -w -D src/ --out-dir lib/",
     "clean": "rm -rf lib/"

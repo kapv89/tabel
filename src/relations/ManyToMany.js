@@ -3,7 +3,7 @@ import {assign, isArray} from 'lodash';
 import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 
-export default class BelongsToMany extends Relation {
+export default class ManyToMany extends Relation {
   constructor(ownerTable, toTable, pivotTable, foreignKey, otherKey, joiner=(() =>{})) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTable, pivotTable, foreignKey, otherKey});

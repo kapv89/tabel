@@ -198,13 +198,6 @@ export default class Orm {
           // will be assigned in this order only
         },
 
-        // used to process model and collection results fetched from the db
-        // override as you need to
-        processors: {
-          model(row) { return row; },
-          collection(rows) { return rows; }
-        },
-
         // predefined scopes on the table
         scopes: {},
         // predefined joints on the table

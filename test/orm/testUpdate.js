@@ -12,9 +12,10 @@ export default async function testUpdate(assert, orm) {
 
     const allPosts = await table('posts').all();
 
-    const post = await table('posts').whereKey(allPosts[0].id).update({
-      created_at: yesterday
-    });
+    const post = await table('posts').update(
+      allPosts[0].id,
+      {created_at: yesterday}
+    );
 
     assert.deepEqual(post.id, allPosts[0].id);
   })();

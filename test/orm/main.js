@@ -26,7 +26,7 @@ import testEagerLoads from './testEagerLoads';
 import testScopesAndJoints from './testScopesAndJoints';
 import testRelationJoints from './testRelationJoints';
 import testBelongsToHelpers from './testBelongsToHelpers';
-import testBelongsToManyHelpers from './testBelongsToManyHelpers';
+import testManyToManyHelpers from './testManyToManyHelpers';
 import testHasManyHelpers from './testHasManyHelpers';
 import testHasManyThroughHelpers from './testHasManyThroughHelpers';
 import testHasOneHelpers from './testHasOneHelpers';
@@ -60,7 +60,7 @@ async function runTests(db) {
   await testScopesAndJoints(assert, orm);
   await testRelationJoints(assert, orm);
   await testBelongsToHelpers(assert, orm);
-  await testBelongsToManyHelpers(assert, orm);
+  await testManyToManyHelpers(assert, orm);
   await testHasManyHelpers(assert, orm);
   await testHasManyThroughHelpers(assert, orm);
   await testHasOneHelpers(assert, orm);

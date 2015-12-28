@@ -12,7 +12,7 @@ export default async function testTableDefinitions(assert, orm) {
 
     relations: {
       roles() {
-        return this.belongsToMany('roles', 'user_role', 'user_id', 'role_id');
+        return this.manyToMany('roles', 'user_role', 'user_id', 'role_id');
       },
 
       posts() {
@@ -55,7 +55,7 @@ export default async function testTableDefinitions(assert, orm) {
 
     relations: {
       users() {
-        return this.belongsToMany('users', 'user_role', 'role_id', 'user_id');
+        return this.manyToMany('users', 'user_role', 'role_id', 'user_id');
       }
     }
   });
@@ -179,7 +179,7 @@ export default async function testTableDefinitions(assert, orm) {
 
     methods: {
       tagables(table) {
-        return this.belongsToMany(table, 'tagable_tag', 'tag_id', 'tagable_id', (j) => {
+        return this.manyToMany(table, 'tagable_tag', 'tag_id', 'tagable_id', (j) => {
           j.on('tagable_tag.tagable_type', '=', this.raw('?', [table]));
         }).withPivot('tagable_type');
       },

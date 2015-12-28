@@ -12,11 +12,11 @@ export default async function testEagerLoads(assert, orm) {
   console.log('testing one level eagerLoads');
   await (async () => {
     console.log('testing belongsTo, hasMany, morphMany');
-    const posts = await table('posts').eagerLoad([
+    const posts = await table('posts').eagerLoad(
       'author',
       'comments',
       'photos'
-    ]).all();
+    ).all();
 
     posts.forEach((post) => {
       assert.deepEqual(post.user_id, post.author.id, 'related author loaded');
@@ -36,12 +36,12 @@ export default async function testEagerLoads(assert, orm) {
       });
     });
 
-    console.log('testing hasManyThrough, belongsToMany, morphOne');
-    const users = await table('users').eagerLoad([
+    console.log('testing hasManyThrough, manyToMany, morphOne');
+    const users = await table('users').eagerLoad(
       'receivedComments',
       'roles',
       'profilePhoto'
-    ]).all();
+    ).all();
 
     users.forEach((user) => {
       user.receivedComments.forEach((comment) => {
@@ -68,9 +68,9 @@ export default async function testEagerLoads(assert, orm) {
     });
 
     console.log('testing morphTo, hasOne');
-    const photos = await table('photos').eagerLoad([
+    const photos = await table('photos').eagerLoad(
       'doc', 'detail'
-    ]).all();
+    ).all();
 
     photos.forEach((photo) => {
       assert.ok(
@@ -101,9 +101,9 @@ export default async function testEagerLoads(assert, orm) {
     ;
 
     console.log('testing hasMany');
-    const users = await table('users').eagerLoad([
+    const users = await table('users').eagerLoad(
       {['posts'](t) { t.whereNotNull('published_on'); }}
-    ]).all();
+    ).all();
 
     users.forEach((user) => {
       user.posts.forEach((post) => {
@@ -122,10 +122,10 @@ export default async function testEagerLoads(assert, orm) {
 
   console.log('testing nested eagerLoads');
   await (async () => {
-    const users = await table('users').eagerLoad([
+    const users = await table('users').eagerLoad(
       'posts.comments.user',
       'profilePhoto'
-    ]).all();
+    ).all();
 
     users.forEach((user) => {
       assert.ok(user.profilePhoto.__table === 'photos', 'correct profile photo loaded');
