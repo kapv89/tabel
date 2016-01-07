@@ -1161,7 +1161,7 @@ export default class Table {
       return this.fork().limit(batchSize).offset((batchNum-1) * batchSize).all()
         .then((models) => {
           try {
-            const batchResult = models.reduce(reducer, batchInitialVal);
+            const batchResult = reducer(batchInitialVal, models);
             if (models.length < batchSize) {
               return batchResult;
             } else {
