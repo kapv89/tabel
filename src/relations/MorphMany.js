@@ -130,7 +130,7 @@ export default class MorphMany extends Relation {
     const {fromTable, toTable, inverse} = this;
     const {foreignKey, typeField} = inverse;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {
@@ -149,7 +149,7 @@ export default class MorphMany extends Relation {
     const {fromTable, toTable, inverse} = this;
     const {foreignKey, typeField} = inverse;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrackhasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {

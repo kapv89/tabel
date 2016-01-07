@@ -51,7 +51,7 @@ export default class HasManyThrough extends Relation {
     }));
 
     return toTable.whereIn(throughTable.c(firstKey), fromKeys)
-      .select(cols).all().then((relatedModels) => {
+      .select(...cols).all().then((relatedModels) => {
         return relatedModels.map((model) => {
           const through = Object.keys(model)
             .filter((field) => field.indexOf(`${throughTable.tableName()}__`) > -1)
@@ -95,7 +95,7 @@ export default class HasManyThrough extends Relation {
     label = this.jointLabel(label, {});
     const {throughTable, toTable, secondKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.joinThrough().joint((q) => {
@@ -111,7 +111,7 @@ export default class HasManyThrough extends Relation {
     label = this.throughJointLabel(label, {});
     const {fromTable, throughTable, firstKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {
@@ -127,7 +127,7 @@ export default class HasManyThrough extends Relation {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {throughTable, toTable, secondKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.leftJoinThrough().joint((q) => {
@@ -143,7 +143,7 @@ export default class HasManyThrough extends Relation {
     label = this.throughJointLabel(label, {isLeftJoin: true});
     const {fromTable, throughTable, firstKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {

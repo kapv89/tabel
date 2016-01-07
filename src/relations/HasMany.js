@@ -105,7 +105,7 @@ export default class HasMany extends Relation {
     label = this.jointLabel(label, {});
     const {fromTable, toTable, foreignKey, key} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {
@@ -121,7 +121,7 @@ export default class HasMany extends Relation {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {fromTable, toTable, foreignKey, key} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {

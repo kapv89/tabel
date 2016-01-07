@@ -354,13 +354,17 @@ export default class Table {
    * @return {this} current instance
    */
   where(...args) {
-    if (args.length === 1 && isUsableObject(args[0])) {
-      const conditions = toPlainObject(args[0]);
+    if (args.length === 1) {
+      if (isUsableObject(args[0])) {
+        const conditions = toPlainObject(args[0]);
 
-      return Object.keys(conditions).reduce(
-        (table, field) => table.where(field, '=', conditions[field]),
-        this
-      );
+        return Object.keys(conditions).reduce(
+          (table, field) => table.where(field, '=', conditions[field]),
+          this
+        );
+      } else if(isFunction(args[0])) {
+        return this.scope((q) => q.where(args[0]), 'where');
+      }
     }
 
     if (args.length === 2) {
@@ -389,13 +393,17 @@ export default class Table {
    * @return {this} current instance
    */
   orWhere(...args) {
-    if (args.length === 1 && isUsableObject(args[0])) {
-      const conditions = toPlainObject(args[0]);
+    if (args.length === 1) {
+      if (isUsableObject(args[0])) {
+        const conditions = toPlainObject(args[0]);
 
-      return Object.keys(conditions).reduce(
-        (table, field) => table.orWhere(field, '=', conditions[field]),
-        this
-      );
+        return Object.keys(conditions).reduce(
+          (table, field) => table.orWhere(field, '=', conditions[field]),
+          this
+        );
+      } else if (isFunction(args[0])) {
+        return this.scope((q) => q.orWhere(args[0]), 'where');
+      }
     }
 
     if (args.length === 2) {
@@ -424,13 +432,17 @@ export default class Table {
    * @return {this} current instance
    */
   whereNot(...args) {
-    if (args.length === 1 && isUsableObject(args[0])) {
-      const conditions = toPlainObject(args[0]);
+    if (args.length === 1) {
+      if (isUsableObject(args[0])) {
+        const conditions = toPlainObject(args[0]);
 
-      return Object.keys(conditions).reduce(
-        (table, field) => table.whereNot(field, '=', conditions[field]),
-        this
-      );
+        return Object.keys(conditions).reduce(
+          (table, field) => table.whereNot(field, '=', conditions[field]),
+          this
+        );
+      } else if (isFunction(args[0])) {
+        return this.scope((q) => q.whereNot(args[0]), 'whereNot');
+      }
     }
 
     if (args.length === 2) {
@@ -459,13 +471,17 @@ export default class Table {
    * @return {this} current instance
    */
   orWhereNot(...args) {
-    if (args.length === 1 && isUsableObject(args[0])) {
-      const conditions = toPlainObject(args[0]);
+    if (args.length === 1) {
+      if (isUsableObject(args[0])) {
+        const conditions = toPlainObject(args[0]);
 
-      return Object.keys(conditions).reduce(
-        (table, field) => table.orWhereNot(field, '=', conditions[field]),
-        this
-      );
+        return Object.keys(conditions).reduce(
+          (table, field) => table.orWhereNot(field, '=', conditions[field]),
+          this
+        );
+      } else if (isFunction(args[0])) {
+        return this.scope((q) => q.orWhereNot(args[0]), 'orWhereNot');
+      }
     }
 
     if (args.length === 2) {
@@ -791,7 +807,7 @@ export default class Table {
    * @param  {mixed} cols the columns to select
    * @return {this} current instance
    */
-  select(cols) {
+  select(...cols) {
     return this.scope((q) => { q.select(this.c(cols)); }, 'select');
   }
 
@@ -841,6 +857,15 @@ export default class Table {
   uncache() {
     return this.scope((q) => { q._orm.destroyCache = true; }, 'uncache');
   }
+
+  /**
+   * apply a debug scope on the query
+   * @param {Boolean} flag true/false
+   * @return {this} current instance
+   */
+   debug(flag=true) {
+     return this.scope((q) => q.debug(flag));
+   }
 
   /**
    * add a scope to eager-load various relations
@@ -1074,9 +1099,9 @@ export default class Table {
    */
   all(...args) {
     if (args.length === 1) {
-      return this.where(args[0]).count();
+      return this.where(args[0]).all();
     } else if (args.length >= 2) {
-      return this.where(...args).count();
+      return this.where(...args).all();
     }
 
     const q = this.query();
@@ -1122,6 +1147,33 @@ export default class Table {
     }).then((result) => {
       return this.processResult(result, {count: true});
     });
+  }
+
+  /**
+   * perform a reduce operation on your scoped rows in batches
+   * @param {int} batchSize number of rows fetched per batch
+   * @param {function} reducer reducer of a batch
+   * @param {mixed} initialVal inital value for the reduce operation
+   * @return {mixed} result of the batchReduce operation
+   */
+  batchReduce(batchSize=1000, reducer=(() => {}), initialVal=null) {
+    const reduceBatchN = (batchNum, batchInitialVal) => {
+      return this.fork().limit(batchSize).offset((batchNum-1) * batchSize).all()
+        .then((models) => {
+          try {
+            const batchResult = models.reduce(reducer, batchInitialVal);
+            if (models.length < batchSize) {
+              return batchResult;
+            } else {
+              return reduceBatchN(batchNum+1, batchResult);
+            }
+          } catch (err) {
+            throw err;
+          }
+        });
+    };
+
+    return reduceBatchN(1, initialVal);
   }
 
   /**
@@ -1424,22 +1476,6 @@ export default class Table {
    * @return {ManyToMany} BelongsToMany relation instance
    */
   manyToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
-    return new ManyToMany(
-      this, this.table(related), this.table(pivot), foreignKey, otherKey,
-      joiner
-    );
-  }
-
-  /**
-   * get a new ManyToMany relation
-   * @param  {string} related related table name
-   * @param  {string} pivot pivot table name
-   * @param  {string} foreignKey foreign-key on this table
-   * @param  {string} otherKey other-key on this table
-   * @param  {function} joiner extra join conditions
-   * @return {ManyToMany} BelongsToMany relation instance
-   */
-  belongsToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
     return new ManyToMany(
       this, this.table(related), this.table(pivot), foreignKey, otherKey,
       joiner

@@ -142,7 +142,7 @@ export default class MorphTo extends Relation {
     const toTable = this.toTables.filter((t) => t.tableName() === tableName)[0];
     const {fromTable, typeField, foreignKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {
@@ -167,7 +167,7 @@ export default class MorphTo extends Relation {
     const toTable = this.toTables.filter((t) => t.tableName() === tableName)[0];
     const {fromTable, typeField, foreignKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {

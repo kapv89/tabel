@@ -48,7 +48,7 @@ export default class ManyToMany extends Relation {
     }));
 
     return toTable.whereIn(pivotTable.c(foreignKey), fromKeys)
-      .select(cols).all().then((relatedModels) => {
+      .select(...cols).all().then((relatedModels) => {
         return relatedModels.map((model) => {
           const pivot = Object.keys(model)
             .filter((field) => field.indexOf(`${pivotTable.tableName()}__`) > -1)
@@ -288,7 +288,7 @@ export default class ManyToMany extends Relation {
     label = this.jointLabel(label, {});
     const {pivotTable, toTable, otherKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.joinPivot().joint((q) => {
@@ -304,7 +304,7 @@ export default class ManyToMany extends Relation {
     label = this.pivotJointLabel(label, {});
     const {pivotTable, fromTable, foreignKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {
@@ -320,7 +320,7 @@ export default class ManyToMany extends Relation {
     label = this.jointLabel(label, {isLeftJoin: true});
     const {pivotTable, toTable, otherKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.leftJoinPivot().joint((q) => {
@@ -336,7 +336,7 @@ export default class ManyToMany extends Relation {
     label = this.pivotJointLabel(label, {isLeftJoin: true});
     const {pivotTable, fromTable, foreignKey} = this;
 
-    if (this.ownerTable.hasJoint(label)) {
+    if (this.ownerTable.scopeTrack.hasJoint(label)) {
       return this.ownerTable;
     } else {
       return this.ownerTable.joint((q) => {

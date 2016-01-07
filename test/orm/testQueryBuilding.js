@@ -254,7 +254,7 @@ export default async function testQueryBuilding(assert, orm) {
     console.log('test select and forPage');
 
     assert.deepEqual(
-      table('photos').select(['id', 'url', 'foo.bar']).query().toString(),
+      table('photos').select('id', 'url', 'foo.bar').query().toString(),
       knex('photos').select(['photos.id', 'photos.url', 'foo.bar']).toString(),
       'select works as expected'
     );
