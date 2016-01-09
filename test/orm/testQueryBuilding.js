@@ -41,7 +41,7 @@ export default async function testQueryBuilding(assert, orm) {
     const user = await table('users').first();
 
     assert.ok(allUsers.map(({id}) => id).indexOf(user.id) > -1, 'same users fetched');
-  });
+  })();
 
   await (async () => {
     console.log('testing find');
@@ -49,7 +49,21 @@ export default async function testQueryBuilding(assert, orm) {
     const user = await table('users').find(allUsers[0].id);
 
     assert.ok(allUsers.map(({id}) => id).indexOf(user.id) > -1, 'same users fetched');
-  });
+  })();
+
+  await (async () => {
+    console.log('testing batchReduce');
+    const commentIds = await table('comments').batchReduce(3, (ids, comments) => {
+      assert.ok(comments.length <= 3, 'proper number of comments per batch');
+      return ids.concat(comments.map(({id}) => id));
+    }, []);
+
+    const knexCommentIds = await knex('comments').select('id').then((rows) => rows.map(({id}) => id));
+
+    commentIds.forEach((commentId) => {
+      assert.ok(knexCommentIds.indexOf(commentId) > -1);
+    });
+  })();
 
   await (async () => {
     console.log('testing whereFalse');
