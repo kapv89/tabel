@@ -141,13 +141,6 @@ export default class Table {
     } else {
       return q.select(this.c('*'));
     }
-
-    //
-    // if (opts.count === true) {
-    //   return q;
-    // } else {
-    //   return q.select(q._orm.columns);
-    // }
   }
 
   /**
@@ -883,12 +876,8 @@ export default class Table {
    * @return {this} current instance
    */
   parseEagerLoads(eagerLoads) {
-    // will be used when no existing constraint is found
-    // will be replaced per relation if a proper constraint is provided for it
-    const placeHolderConstraint = () => {};
-
     // if eagerLoads is of the form ['foo', 'foo.bar', {'foo.baz': (t) => { t.where('active', true); }}]
-    // then use placeHolderConstraint for 'foo' & 'foo.bar'
+    // then use a place-holder constraint for 'foo' & 'foo.bar'
     // and reduce to form {'rel1': constraint1, 'rel2': constraint2}
     if (isArray(eagerLoads)) {
       return this.parseEagerLoads(
@@ -896,7 +885,7 @@ export default class Table {
           if (isUsableObject(eagerLoad)) {
             return toPlainObject(eagerLoad);
           } else {
-            return {[eagerLoad]: placeHolderConstraint};
+            return {[eagerLoad]: () => {}};
           }
         }).reduce((eagerLoadsObject, eagerLoad) => {
           return assign(eagerLoadsObject, eagerLoad);
@@ -926,7 +915,7 @@ export default class Table {
         if (relation in eagerLoads) {
           return assign(parsedEagerLoads, {[relation]: eagerLoads[relation]});
         } else {
-          return assign(parsedEagerLoads, {[relation]: placeHolderConstraint});
+          return assign(parsedEagerLoads, {[relation]: () => {}});
         }
       }, {})
     ;

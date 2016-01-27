@@ -14,7 +14,7 @@ runTests(...process.argv.slice(2));
 
 async function runTests(db, numTestCases, chunk) {
   if (! (db in config) || ! isFinite(parseInt(numTestCases, 10) || ! isFinite(parseInt(chunk, 10)))) {
-    console.log('Usage: `npm run test:orm [pg|mysql|sqlite] [numTestCases] [chunk]`');
+    console.log('Usage: `npm run test:collisions [pg|mysql|sqlite] [numTestCases] [chunk]`');
     console.log('Please provide the appropriate config too in `test/config.js`');
     return;
   }

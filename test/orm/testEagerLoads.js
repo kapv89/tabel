@@ -1,4 +1,4 @@
-import {assign} from 'lodash';
+import {assign, isArray} from 'lodash';
 
 export default async function testEagerLoads(assert, orm) {
   const {table} = orm.exports;
@@ -96,28 +96,138 @@ export default async function testEagerLoads(assert, orm) {
 
   console.log('testing one level eagerLoads with constraints');
   await (async () => {
-    await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
-      .update({published_on: new Date()})
-    ;
+    await (async () => {
+      console.log('testing hasMany');
 
-    console.log('testing hasMany');
-    const users = await table('users').eagerLoad(
-      {['posts'](t) { t.whereNotNull('published_on'); }}
-    ).all();
+      await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
+        .update({published_on: new Date()})
+      ;
 
-    users.forEach((user) => {
-      user.posts.forEach((post) => {
+      const users = await table('users').eagerLoad(
+        {['posts'](t) { t.whereNotNull('published_on'); }}
+      ).all();
+
+      users.forEach((user) => {
+        user.posts.forEach((post) => {
+          assert.ok(
+            post.published_on instanceof Date,
+            'valid post eagerLoaded'
+          );
+        });
+      });
+
+      await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
+        .update({published_on: null})
+      ;
+    })();
+
+    await (async () => {
+      console.log('testing belongsTo');
+      const posts = await table('posts').eagerLoad(
+        {'author': (t) => t.where('id', 'in', all.users.slice(0, 2).map(({id}) => id))}
+      ).all();
+
+      posts.forEach((post) => {
         assert.ok(
-          post.published_on instanceof Date,
-          'valid post eagerLoaded'
+          post.author === null ||
+          all.users.slice(0, 2).map(({id}) => id).indexOf(post.author.id) > -1
         );
       });
-    });
+    })();
 
-    await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
-      .update({published_on: null})
-    ;
-    console.log('we will be lazy and not test any more of this, and just move on to nested eagerLoads');
+    await (async () => {
+      console.log('testing hasOne');
+      const photos = await table('photos').eagerLoad(
+        {'detail': (t) => t.where('photo_id', 'in', all.photo_details.slice(0, 2).map(({photo_id}) => photo_id))}
+      ).all();
+
+      photos.forEach((photo) => {
+        assert.ok(
+          photo.detail === null ||
+          all.photo_details.slice(0, 2).map(({photo_id}) => photo_id).indexOf(photo.detail.photo_id) > -1
+        );
+      });
+    })();
+
+    await (async () => {
+      console.log('testing hasManyThrough');
+
+      await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
+        .update({published_on: new Date()})
+      ;
+
+      const users = await table('users').eagerLoad(
+        {'receivedComments': (t) => t.whereNotNull('posts.published_on')}
+      ).all();
+
+      users.forEach((user) => {
+        assert.ok(isArray(user.receivedComments), 'receivedComments should be an array');
+        user.receivedComments.forEach((comment) => {
+          assert.ok(all.posts.map(({id}) => id).indexOf(comment.through.id) > -1);
+        });
+      });
+
+      await table('posts').whereKey(all.posts.slice(0, 2).map(({id}) => id))
+        .update({published_on: null})
+      ;
+    })();
+
+    await (async () => {
+      console.log('testing manyToMany');
+
+      const users = await table('users').eagerLoad(
+        {'roles': (t) => t.where('id', 'in', all.roles.slice(0, 2).map(({id}) => id))}
+      ).all();
+
+      users.forEach((user) => {
+        assert.ok(isArray(user.roles), 'roles are an array');
+        user.roles.forEach((role) => {
+          assert.ok(all.roles.slice(0, 2).map(({id}) => id).indexOf(role.id) > -1);
+        });
+      });
+    })();
+
+    await (async () => {
+      console.log('testing morphMany');
+
+      const posts = await table('posts').eagerLoad(
+        {'photos': (t) => t.where(
+          'id', 'in', all.photos.filter(({doc_type}) => doc_type === 'posts').slice(0, 2).map(({id}) => id)
+        )}
+      ).all();
+
+      posts.forEach((post) => {
+        assert.ok(isArray(post.photos), 'photos are an array');
+        post.photos.forEach((photo) => {
+          assert.ok(
+            all.photos.filter(({doc_type}) => doc_type === 'posts')
+              .slice(0, 2).map(({id}) => id).indexOf(photo.id) > -1
+          );
+        });
+      });
+    })();
+
+    await (async () => {
+      console.log('testing morphOne');
+
+      const users = await table('users').eagerLoad(
+        {'profilePhoto': (t) => t.where(
+          'id', 'in', all.photos.filter(({doc_type}) => doc_type === 'users').slice(0, 2).map(({id}) => id)
+        )}
+      ).all();
+
+      users.forEach((user) => {
+        assert.ok(
+          user.profilePhoto === null ||
+          all.photos.filter(({doc_type}) => doc_type === 'users')
+            .slice(0, 2).map(({id}) => id).indexOf(user.profilePhoto.id) > -1
+        );
+      });
+    })();
+
+    await (async () => {
+      console.log('testing morphTo');
+    })();
   })();
 
   console.log('testing nested eagerLoads');
@@ -139,5 +249,5 @@ export default async function testEagerLoads(assert, orm) {
     });
   })();
 
-  console.log('we will again be lazy and not test constrained nested eagerLoads');
+  console.log('we will be lazy and not test constrained nested eagerLoads');
 }

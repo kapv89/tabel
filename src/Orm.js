@@ -5,7 +5,6 @@ import {merge, isString} from 'lodash';
 import isUsableObject from './isUsableObject';
 import Table from './Table';
 import migrator from './migrator';
-import Util from './util/Util';
 
 export default class Orm {
   constructor(config={}) {
@@ -30,9 +29,6 @@ export default class Orm {
 
     // migrator
     this.migrator = migrator(this);
-
-    // util
-    this.util = new Util(this);
 
     // exports which can be exported in place of orm instance
     this.exports = {

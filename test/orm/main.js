@@ -33,7 +33,6 @@ import testHasOneHelpers from './testHasOneHelpers';
 import testMorphManyHelpers from './testMorphManyHelpers';
 import testMorphOneHelpers from './testMorphOneHelpers';
 import testMorphToHelpers from './testMorphToHelpers';
-import testValidator from './testValidator';
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
@@ -67,7 +66,6 @@ async function runTests(db) {
   await testMorphManyHelpers(assert, orm);
   await testMorphOneHelpers(assert, orm);
   await testMorphToHelpers(assert, orm);
-  await testValidator(assert, orm);
 
   await teardownTables(orm);
 
