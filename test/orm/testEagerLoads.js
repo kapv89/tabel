@@ -247,7 +247,22 @@ export default async function testEagerLoads(assert, orm) {
         });
       });
     });
+
+    const posts = await table('posts').eagerLoad(
+      {'comments.user': (t) => t.where('id', 'in', all.users.slice(0, 2).map(({id}) => id))},
+      'photos'
+    ).all();
+
+    posts.forEach((post) => {
+      post.comments.forEach((comment) => {
+        assert.ok(comment.__table === 'comments');
+        assert.ok(
+          comment.user === null ||
+          all.users.slice(0, 2).map(({id}) => id).indexOf(comment.user.id) > -1
+        );
+      });
+    });
   })();
 
-  console.log('we will be lazy and not test constrained nested eagerLoads');
+  console.log('we will be lazy and not test constrained nested eagerLoads anymore');
 }

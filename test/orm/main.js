@@ -50,6 +50,7 @@ async function runTests(db) {
 
   await teardownTables(orm);
   await setupTables(orm);
+
   await testTableDefinitions(assert, orm);
   await testInsert(assert, orm);
   await testQueryBuilding(assert, orm);

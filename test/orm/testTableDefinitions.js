@@ -214,7 +214,7 @@ export default async function testTableDefinitions(assert, orm) {
 
   console.log('testing defined tables');
 
-  // we reached here means tables been defined as expected
+  // we reached here means tables have been defined as expected
   Array.from(orm.tables.keys()).forEach((tableName) => {
     assert.ok(orm.tbl(tableName) instanceof Table, `orm.tbl(${tableName}) instance of Table`);
   });
