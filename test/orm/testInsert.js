@@ -13,7 +13,7 @@ export default async function testInsert(assert, orm) {
 
     const knexUser = await knex('users').where('id', user.id).first();
 
-    assert.ok('id' in user, 'insertion appends id automatically in tables with autoId true');
+    assert.ok(user.hasOwnProperty('id'), 'insertion appends id automatically in tables with autoId true');
     assert.deepEqual(knexUser.id, user.id, 'the inserted record exists in db');
     assert.deepEqual(knexUser.username, user.username, 'with same fields');
     assert.deepEqual(knexUser.password, user.password, '...checking another field');
