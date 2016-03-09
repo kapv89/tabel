@@ -2,7 +2,12 @@ import {isString} from 'lodash';
 
 export default function migrator(orm) {
   return {
-    mount({devDir='./src/migrations', distDir='./lib/migrations', getArgs=(() => process.argv.slice(2))}) {
+    mount({
+      devDir='./src/migrations',
+      distDir='./lib/migrations',
+      getArgs=(() => process.argv.slice(2)),
+      stub=`${__dirname}/migration.babel.stub`
+    }) {
       const knex = orm.knex;
       const args = getArgs();
 
@@ -13,7 +18,7 @@ export default function migrator(orm) {
         return orm.close();
       } else {
         return ((cmd, ...args) => {
-          return commands[cmd](knex, {devDir, distDir}, ...args)
+          return commands[cmd](knex, {devDir, distDir, stub}, ...args)
             .then(() => orm.close())
           ;
         })(...args);
@@ -23,7 +28,7 @@ export default function migrator(orm) {
 }
 
 const commands = {
-  make(knex, {devDir}, migration) {
+  make(knex, {devDir, stub}, migration) {
     if (! isString(migration) || migration.length === 0) {
       console.log('Usage: npm run task:migrate make MigrationName');
       return Promise.resolve({});
@@ -31,7 +36,7 @@ const commands = {
 
     console.log(`Making migration ${migration}`);
     return knex.migrate.make(migration, {
-      stub: `${__dirname}/migration.babel.stub`,
+      stub,
       directory: devDir
     });
   },
