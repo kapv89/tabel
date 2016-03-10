@@ -32,6 +32,7 @@
 
 import md5 from 'md5';
 import uuid from 'uuid';
+import isUsableObject from 'isusableobject';
 import {
   isArray,
   isString,
@@ -43,7 +44,6 @@ import {
   toPlainObject
 } from 'lodash';
 
-import isUsableObject from './isUsableObject';
 import Scope from './Scope';
 import Track from './Track';
 

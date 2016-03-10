@@ -1,8 +1,8 @@
 import knex from 'knex';
 import KRedis from 'kredis';
 import {merge, isString} from 'lodash';
+import isUsableObject from 'isusableobject';
 
-import isUsableObject from './isUsableObject';
 import Table from './Table';
 import migrator from './migrator';
 
@@ -38,8 +38,7 @@ export default class Orm {
       raw: this.raw.bind(this),
       migrator: this.migrator,
       cache: this.cache,
-      knex: this.knex,
-      isUsableObject
+      knex: this.knex
     };
   }
 

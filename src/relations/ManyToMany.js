@@ -1,6 +1,6 @@
 import {assign, isArray} from 'lodash';
+import isUsableObject from 'isusableobject';
 
-import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 
 export default class ManyToMany extends Relation {

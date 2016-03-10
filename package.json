@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm with over knex.js which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
@@ -14,6 +14,7 @@
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "isusableobject": "^0.1.1",
     "knex": "~0.9.0",
     "kredis": "^1.0.1",
     "lodash": "^3.10.1",

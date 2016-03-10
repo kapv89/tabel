@@ -1,6 +1,6 @@
 import {assign} from 'lodash';
+import isUsableObject from 'isusableobject';
 
-import isUsableObject from '../isUsableObject';
 import Relation from './Relation';
 import MorphTo from './Relation';
 
