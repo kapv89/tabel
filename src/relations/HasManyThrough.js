@@ -1,8 +1,8 @@
-import {assign, isArray} from 'lodash';
+const {assign, isArray} = require('lodash');
 
-import Relation from './Relation';
+const Relation = require('./Relation');
 
-export default class HasManyThrough extends Relation {
+class HasManyThrough extends Relation {
   constructor(ownerTable, toTable, throughTable, firstKey, secondKey, joiner=(() => {})) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTable, throughTable, firstKey, secondKey});
@@ -79,7 +79,7 @@ export default class HasManyThrough extends Relation {
     const keyDict = relatedModels.reduce((dict, m) => {
       const key = m.through[firstKey];
 
-      if (! isArray(dict[key])) {
+      if (!isArray(dict[key])) {
         return assign(dict, {[key]: [m]});
       } else {
         return assign(dict, {[key]: dict[key].concat([m])});
@@ -155,3 +155,5 @@ export default class HasManyThrough extends Relation {
     }
   }
 }
+
+module.exports = HasManyThrough;

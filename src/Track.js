@@ -1,4 +1,4 @@
-export default class Track {
+class Track {
   constructor(scopes=[]) {
     this.scopes = scopes;
   }
@@ -60,3 +60,5 @@ export default class Track {
     return this;
   }
 }
+
+module.exports = Track;

@@ -11,70 +11,69 @@
  * for all subsequent tests.
  */
 
-import assert from 'assert';
+const assert = require('assert');
 
-import Tabel from '../../src/Orm';
+const Tabel = require('../../src/Orm');
 
-import config from '../config';
+const config = require('../config');
 
-import testTableDefinitions from './testTableDefinitions';
-import testInsert from './testInsert';
-import testQueryBuilding from './testQueryBuilding';
-import testUpdate from './testUpdate';
-import testDelete from './testDelete';
-import testEagerLoads from './testEagerLoads';
-import testScopesAndJoints from './testScopesAndJoints';
-import testRelationJoints from './testRelationJoints';
-import testBelongsToHelpers from './testBelongsToHelpers';
-import testManyToManyHelpers from './testManyToManyHelpers';
-import testHasManyHelpers from './testHasManyHelpers';
-import testHasManyThroughHelpers from './testHasManyThroughHelpers';
-import testHasOneHelpers from './testHasOneHelpers';
-import testMorphManyHelpers from './testMorphManyHelpers';
-import testMorphOneHelpers from './testMorphOneHelpers';
-import testMorphToHelpers from './testMorphToHelpers';
+const testTableDefinitions = require('./testTableDefinitions');
+const testInsert = require('./testInsert');
+const testQueryBuilding = require('./testQueryBuilding');
+const testUpdate = require('./testUpdate');
+const testDelete = require('./testDelete');
+const testEagerLoads = require('./testEagerLoads');
+const testScopesAndJoints = require('./testScopesAndJoints');
+const testRelationJoints = require('./testRelationJoints');
+const testBelongsToHelpers = require('./testBelongsToHelpers');
+const testManyToManyHelpers = require('./testManyToManyHelpers');
+const testHasManyHelpers = require('./testHasManyHelpers');
+const testHasManyThroughHelpers = require('./testHasManyThroughHelpers');
+const testHasOneHelpers = require('./testHasOneHelpers');
+const testMorphManyHelpers = require('./testMorphManyHelpers');
+const testMorphOneHelpers = require('./testMorphOneHelpers');
+const testMorphToHelpers = require('./testMorphToHelpers');
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
 
 runTests(...process.argv.slice(2));
 
-async function runTests(db) {
-  if (! (db in config)) {
+function runTests(db) {
+  if (!(db in config)) {
     console.log('Usage: `npm run test:orm pg|mysql|sqlite`');
     console.log('Please provide the appropriate config too in `test/config.js`');
-    return;
+    return Promise.resolve();
   }
 
   const orm = new Tabel(config[db]);
 
-  await teardownTables(orm);
-  await setupTables(orm);
-
-  await testTableDefinitions(assert, orm);
-  await testInsert(assert, orm);
-  await testQueryBuilding(assert, orm);
-  await testUpdate(assert, orm);
-  await testDelete(assert, orm);
-  await testEagerLoads(assert, orm);
-  await testScopesAndJoints(assert, orm);
-  await testRelationJoints(assert, orm);
-  await testBelongsToHelpers(assert, orm);
-  await testManyToManyHelpers(assert, orm);
-  await testHasManyHelpers(assert, orm);
-  await testHasManyThroughHelpers(assert, orm);
-  await testHasOneHelpers(assert, orm);
-  await testMorphManyHelpers(assert, orm);
-  await testMorphOneHelpers(assert, orm);
-  await testMorphToHelpers(assert, orm);
-
-  await teardownTables(orm);
-
-  await orm.close();
+  return teardownTables(orm).then(() => setupTables(orm))
+    .then(() => [
+      testTableDefinitions,
+      testInsert,
+      testQueryBuilding,
+      testUpdate,
+      testDelete,
+      testEagerLoads,
+      testScopesAndJoints,
+      testRelationJoints,
+      testBelongsToHelpers,
+      testManyToManyHelpers,
+      testHasManyHelpers,
+      testHasManyThroughHelpers,
+      testHasOneHelpers,
+      testMorphManyHelpers,
+      testMorphOneHelpers,
+      testMorphToHelpers
+    ].reduce((chain, test) => chain.then(() => test(assert, orm)), Promise.resolve()))
+    .then(() => teardownTables(orm))
+    .then(() => orm.close())
+  ;
 }
 
-async function setupTables({knex}) {
-  await Promise.all([
+function setupTables({knex}) {
+  return Promise.all([
     knex.schema.createTable('users', (t) => {
       t.uuid('id').primary();
       t.string('username');
@@ -148,8 +147,8 @@ async function setupTables({knex}) {
   ]);
 }
 
-async function teardownTables({knex}) {
-  await Promise.all([
+function teardownTables({knex}) {
+  return Promise.all([
     'users', 'roles', 'user_role', 'posts', 'comments', 'photos',
     'photo_details', 'tags', 'tagable_tag'
   ].map((t) => knex.schema.dropTableIfExists(t)));

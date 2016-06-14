@@ -1,19 +1,16 @@
-export default async function testScopesAndJoints(assert, orm) {
+function testScopesAndJoints(assert, orm) {
   const {table} = orm.exports;
 
-  console.log('test scopes');
-  await (async () => {
-    const comments = await table('comments').all();
-
-    await* comments.map(async ({id}, i) => {
-      if (i % 2 === 0) {
-        await table('comments').update(id, {is_flagged: true});
-      }
-    });
-
-    const flaggedComments = await table('comments').whereFlagged().all();
-    const unflaggedComments = await table('comments').whereNotFlagged().all();
-
+  return (() => {
+    console.log('test scopes');
+    return Promise.resolve();
+  })().then(() => table('comments').all()).then((comments) => Promise.all(comments.map(({id}, i) => {
+    return i % 2 === 0 ? table('comments').update(id, {is_flagged: true}) : table('comments').find(id);
+  }))).then((comments) => Promise.all([
+    comments,
+    table('comments').whereFlagged().all(),
+    table('comments').whereNotFlagged().all()
+  ])).then(([comments, flaggedComments, unflaggedComments]) => {
     assert.deepEqual(comments.filter((_, i) => i % 2 === 0).length, flaggedComments.length);
 
     comments.filter((_, i) => i % 2 === 0).forEach((comment) => {
@@ -23,7 +20,9 @@ export default async function testScopesAndJoints(assert, orm) {
     comments.filter((_, i) => i % 2 !== 0).forEach((comment) => {
       assert.ok(unflaggedComments.map(({id}) => id).indexOf(comment.id) > -1);
     });
-  })();
-
-  console.log('test joints');
+  }).then(() => {
+    console.log('test joints');
+  });
 }
+
+module.exports = testScopesAndJoints;

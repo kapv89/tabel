@@ -1,12 +1,11 @@
-import knex from 'knex';
-import KRedis from 'kredis';
-import {merge, isString} from 'lodash';
-import isUsableObject from 'isusableobject';
+const knex = require('knex');
+const KRedis = require('kredis');
+const {merge, isString} = require('lodash');
 
-import Table from './Table';
-import migrator from './migrator';
+const Table = require('./Table');
+const migrator = require('./migrator');
 
-export default class Orm {
+class Orm {
   constructor(config={}) {
     if ('db' in config) {
       this.knex = knex(config.db);
@@ -108,7 +107,7 @@ export default class Orm {
 
   // get a table object
   table(tableName, trx=null) {
-    if (! this.tables.has(tableName)) {
+    if (!this.tables.has(tableName)) {
       throw new Error(`trying to access invalid table ${tableName}`);
     }
 
@@ -129,7 +128,7 @@ export default class Orm {
   defineTable(params={}) {
     const tableName = params.name;
 
-    if (! isString(tableName)) {
+    if (!isString(tableName)) {
       throw new Error(`Invalid table-name: ${tableName} supplied via key 'name'`);
     }
 
@@ -143,7 +142,7 @@ export default class Orm {
   }
 
   extendTable(tableName, {scopes={}, joints={}, relations={}, methods={}}) {
-    if (! this.tableClasses.has(tableName)) {
+    if (!this.tableClasses.has(tableName)) {
       throw new Error(`Table '${tableName}' not defined yet`);
     }
 
@@ -325,3 +324,5 @@ export default class Orm {
     );
   }
 }
+
+module.exports = Orm;

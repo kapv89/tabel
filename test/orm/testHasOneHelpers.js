@@ -1,3 +1,5 @@
-export default async function testHasOneHelpers(test, orm) {
-
+function testHasOneHelpers(test, orm) {
+  return Promise.resolve();
 }
+
+module.exports = testHasOneHelpers;

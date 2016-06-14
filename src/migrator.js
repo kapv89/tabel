@@ -1,6 +1,6 @@
-import {isString} from 'lodash';
+const {isString} = require('lodash');
 
-export default function migrator(orm) {
+function migrator(orm) {
   return {
     mount({
       devDir='./src/migrations',
@@ -29,7 +29,7 @@ export default function migrator(orm) {
 
 const commands = {
   make(knex, {devDir, stub}, migration) {
-    if (! isString(migration) || migration.length === 0) {
+    if (!isString(migration) || migration.length === 0) {
       console.log('Usage: npm run task:migrate make MigrationName');
       return Promise.resolve({});
     }
@@ -105,3 +105,5 @@ const commands = {
     });
   }
 };
+
+module.exports = migrator;

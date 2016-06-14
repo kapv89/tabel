@@ -1,7 +1,6 @@
-import Table from '../../src/Table';
+const Table = require('../../src/Table');
 
-export default async function testTableDefinitions(assert, orm) {
-
+function testTableDefinitions(assert, orm) {
   orm.defineTable({
     name: 'users',
 
@@ -247,3 +246,5 @@ export default async function testTableDefinitions(assert, orm) {
     assert.notEqual(['whereFlagged', 'whereNotFlagged'].indexOf(scope), -1, `${scope} is valid scope`);
   });
 }
+
+module.exports = testTableDefinitions;

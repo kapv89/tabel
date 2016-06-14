@@ -1,3 +1,5 @@
-export default async function testManyToManyHelpers(test, orm) {
-
+function testManyToManyHelpers(test, orm) {
+  return Promise.resolve();
 }
+
+module.exports = testManyToManyHelpers;

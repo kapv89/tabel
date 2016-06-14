@@ -7,12 +7,12 @@
  * - load
  */
 
-import {isString} from 'lodash';
+const {isString} = require('lodash');
 
-import Scope from '../Scope';
-import Track from '../Track';
+const Scope = require('../Scope');
+const Track = require('../Track');
 
-export default class Relation {
+class Relation {
   constructor(ownerTable) {
     this.ownerTable = ownerTable;
     this.constraints = new Track();
@@ -93,3 +93,5 @@ export default class Relation {
     throw new Error('not imeplemented');
   }
 }
+
+module.exports = Relation;

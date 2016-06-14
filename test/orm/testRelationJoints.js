@@ -1,3 +1,5 @@
-export default async function testRelationJoints(test, orm) {
-
+function testRelationJoints(test, orm) {
+  return Promise.resolve();
 }
+
+module.exports = testRelationJoints;

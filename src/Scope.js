@@ -1,4 +1,4 @@
-export default class Scope {
+class Scope {
   constructor(closure, label, isJoint=false) {
     this.closure = closure;
     this.label = label;
@@ -10,3 +10,5 @@ export default class Scope {
     return q;
   }
 }
+
+module.exports = Scope;

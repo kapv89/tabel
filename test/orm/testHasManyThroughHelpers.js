@@ -1,3 +1,5 @@
-export default async function testHasManyThroughHelpers(test, orm) {
-
+function testHasManyThroughHelpers(test, orm) {
+  return Promise.resolve();
 }
+
+module.exports = testHasManyThroughHelpers;

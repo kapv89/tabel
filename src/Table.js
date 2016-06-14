@@ -30,10 +30,10 @@
 }
 */
 
-import md5 from 'md5';
-import uuid from 'uuid';
-import isUsableObject from 'isusableobject';
-import {
+const md5 = require('md5');
+const uuid = require('uuid');
+const isUsableObject = require('isusableobject');
+const {
   isArray,
   isString,
   isDate,
@@ -42,21 +42,21 @@ import {
   assign,
   merge,
   toPlainObject
-} from 'lodash';
+} = require('lodash');
 
-import Scope from './Scope';
-import Track from './Track';
+const Scope = require('./Scope');
+const Track = require('./Track');
 
-import HasOne from './relations/HasOne';
-import HasMany from './relations/HasMany';
-import HasManyThrough from './relations/HasManyThrough';
-import BelongsTo from './relations/BelongsTo';
-import ManyToMany from './relations/ManyToMany';
-import MorphOne from './relations/MorphOne';
-import MorphMany from './relations/MorphMany';
-import MorphTo from './relations/MorphTo';
+const HasOne = require('./relations/HasOne');
+const HasMany = require('./relations/HasMany');
+const HasManyThrough = require('./relations/HasManyThrough');
+const BelongsTo = require('./relations/BelongsTo');
+const ManyToMany = require('./relations/ManyToMany');
+const MorphOne = require('./relations/MorphOne');
+const MorphMany = require('./relations/MorphMany');
+const MorphTo = require('./relations/MorphTo');
 
-export default class Table {
+class Table {
   constructor(orm) {
     this.orm = orm;
     this.scopeTrack = new Track();
@@ -856,9 +856,9 @@ export default class Table {
    * @param {Boolean} flag true/false
    * @return {this} current instance
    */
-   debug(flag=true) {
-     return this.scope((q) => q.debug(flag));
-   }
+  debug(flag=true) {
+    return this.scope((q) => q.debug(flag));
+  }
 
   /**
    * add a scope to eager-load various relations
@@ -1031,7 +1031,7 @@ export default class Table {
       .filter((relation) => relation.indexOf('.') === -1)
       .map((relation) => {
         // check for the relation actually being there
-        if (! this.definedRelations.has(relation)) {
+        if (!this.definedRelations.has(relation)) {
           throw new Error(`invalid relation ${relation}`);
         }
 
@@ -1123,7 +1123,7 @@ export default class Table {
 
         this.scopeTrack.apply(q);
 
-        if (! this.scopeTrack.hasScope('select')) {
+        if (!this.scopeTrack.hasScope('select')) {
           q.select(this.c('*'));
         }
 
@@ -1200,7 +1200,7 @@ export default class Table {
           return this.whereKey(condition).del();
         }
       })(...args);
-      default: this.where(...args).del();
+      default: return this.where(...args).del();
     }
   }
 
@@ -1240,11 +1240,11 @@ export default class Table {
       const timestamp = new Date();
       const [createdAtCol, updatedAtCol] = this.timestampsCols();
 
-      if (! isDate(values[createdAtCol]) && op === 'insert') {
+      if (!isDate(values[createdAtCol]) && op === 'insert') {
         assign(values, {[createdAtCol]: timestamp});
       }
 
-      if (! isDate(values[updatedAtCol]) && ['insert', 'update'].indexOf(op) > -1) {
+      if (!isDate(values[updatedAtCol]) && ['insert', 'update'].indexOf(op) > -1) {
         assign(values, {[updatedAtCol]: timestamp});
       }
     }
@@ -1267,7 +1267,7 @@ export default class Table {
    * @return {Promise} uuid
    */
   genKeyVal() {
-    if (! this.props.autoId) {
+    if (!this.props.autoId) {
       return Promise.resolve({});
     }
 
@@ -1508,3 +1508,5 @@ export default class Table {
     return new MorphTo(this, tables, typeField, foreignKey);
   }
 }
+
+module.exports = Table;

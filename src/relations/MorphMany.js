@@ -1,11 +1,11 @@
-import {assign, isArray} from 'lodash';
+const {assign, isArray} = require('lodash');
 
-import Relation from './Relation';
-import MorphTo from './MorphTo';
+const Relation = require('./Relation');
+const MorphTo = require('./MorphTo');
 
-export default class MorphMany extends Relation {
+class MorphMany extends Relation {
   constructor(ownerTable, toTable, inverse) {
-    if (! (inverse instanceof MorphTo)) {
+    if (!(inverse instanceof MorphTo)) {
       throw new Error('inverse should be a MorphTo relation');
     }
 
@@ -46,7 +46,7 @@ export default class MorphMany extends Relation {
     const keyDict = relatedModels.reduce((dict, m) => {
       const key = m[foreignKey];
 
-      if (! isArray(dict[key])) {
+      if (!isArray(dict[key])) {
         return assign(dict, {[key]: [m]});
       } else {
         return assign(dict, {[key]: dict[key].concat(m)});
@@ -163,3 +163,5 @@ export default class MorphMany extends Relation {
     }
   }
 }
+
+module.exports = MorphMany;

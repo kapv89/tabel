@@ -1,12 +1,12 @@
-import {assign} from 'lodash';
-import isUsableObject from 'isusableobject';
+const {assign} = require('lodash');
+const isUsableObject = require('isusableobject');
 
-import Relation from './Relation';
-import MorphTo from './Relation';
+const Relation = require('./Relation');
+const MorphTo = require('./Relation');
 
-export default class MorphOne extends Relation {
+class MorphOne extends Relation {
   constructor(ownerTable, toTable, inverse) {
-    if (! (inverse instanceof MorphTo)) {
+    if (!(inverse instanceof MorphTo)) {
       throw new Error('inverse should be a MorphTo relation');
     }
 
@@ -148,3 +148,5 @@ export default class MorphOne extends Relation {
     }
   }
 }
+
+module.exports = MorphOne;

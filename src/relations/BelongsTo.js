@@ -1,9 +1,9 @@
-import {assign} from 'lodash';
-import isUsableObject from 'isusableobject';
+const {assign} = require('lodash');
+const isUsableObject = require('isusableobject');
 
-import Relation from './Relation';
+const Relation = require('./Relation');
 
-export default class BelongsTo extends Relation {
+class BelongsTo extends Relation {
   constructor(ownerTable, toTable, foreignKey, otherKey) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTable, foreignKey, otherKey});
@@ -135,3 +135,5 @@ export default class BelongsTo extends Relation {
     }
   }
 }
+
+module.exports = BelongsTo;

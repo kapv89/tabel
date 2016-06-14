@@ -1,3 +1,5 @@
-export default async function testMorphToHelpers(test, orm) {
-
+function testMorphToHelpers(test, orm) {
+  return Promise.resolve();
 }
+
+module.exports = testMorphToHelpers;

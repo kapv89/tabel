@@ -1,54 +1,50 @@
 // this is the test for collison of uuids
 
-import {range, isFinite} from 'lodash';
-import faker from 'faker';
+const {range, isFinite} = require('lodash');
+const faker = require('faker');
 
-import Tabel from '../../src/Orm';
+const Tabel = require('../../src/Orm');
 
-import config from '../config';
+const config = require('../config');
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
 
 runTests(...process.argv.slice(2));
 
-async function runTests(db, numTestCases, chunk) {
-  if (! (db in config) || ! isFinite(parseInt(numTestCases, 10) || ! isFinite(parseInt(chunk, 10)))) {
+function runTests(db, numTestCases, chunk) {
+  if (!(db in config) || !isFinite(parseInt(numTestCases, 10) || !isFinite(parseInt(chunk, 10)))) {
     console.log('Usage: `npm run test:collisions [pg|mysql|sqlite] [numTestCases] [chunk]`');
     console.log('Please provide the appropriate config too in `test/config.js`');
-    return;
+    return Promise.resolve();
   }
 
-  const orm = new Tabel(config[db]);
+  const {knex, table, orm} = new Tabel(config[db]).exports;
 
-  await orm.knex.schema.dropTableIfExists('collisions');
-  await orm.knex.schema.createTable('collisions', (t) => {
-    t.uuid('id').primary();
-    t.text('title');
-  });
+  return knex.schema.dropTableIfExists('collisions')
+    .then(() => knex.schema.createTable('collisions', (t) => {
+      t.uuid('id').primary();
+      t.text('title');
+    }))
+    .then(() => orm.defineTable({
+      name: 'collisions',
+      props: {autoId: true}
+    }))
+    .then(() => insert(table, parseInt(numTestCases, 10), parseInt(chunk, 10)))
+    .then(() => console.log(`${parseInt(numTestCases, 10)} cases tested`))
+    .then(() => knex.schema.dropTableIfExists('collisions'))
+    .then(() => orm.close())
+  ;
+}
 
-  orm.defineTable({
-    name: 'collisions',
-    props: {autoId: true}
-  });
 
-  const TEST_CASES = parseInt(numTestCases, 10);
-  const CHUNK = parseInt(chunk, 10);
-  let cur = 0;
-
-  async function insert() {
-    if (cur < TEST_CASES) {
-      console.log(`${cur} to ${cur+CHUNK}`);
-      await* range(CHUNK).map(() => orm.table('collisions').insert({title: faker.lorem.sentence()}));
-      cur = cur + CHUNK;
-      return await insert();
-    }
+function insert(table, testCases, chunk, cur=0) {
+  if (cur < testCases) {
+    console.log(`${cur} to ${cur+chunk}`);
+    return Promise.all(range(chunk).map(() => table('collisions').insert({title: faker.lorem.sentence()})))
+      .then(() => insert(table, testCases, chunk, cur+chunk))
+    ;
+  } else {
+    return Promise.resolve();
   }
-
-  await insert();
-
-  console.log(`${TEST_CASES} cases tested`);
-
-  await orm.knex.schema.dropTableIfExists('collisions');
-  await orm.close();
 }

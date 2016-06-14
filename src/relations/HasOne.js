@@ -1,9 +1,9 @@
-import {assign} from 'lodash';
-import isUsableObject from 'isusableobject';
+const {assign} = require('lodash');
+const isUsableObject = require('isusableobject');
 
-import Relation from './Relation';
+const Relation = require('./Relation');
 
-export default class HasOne extends Relation {
+class HasOne extends Relation {
   constructor(ownerTable, toTable, foreignKey, key) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTable, foreignKey, key});
@@ -120,3 +120,5 @@ export default class HasOne extends Relation {
     }
   }
 }
+
+module.exports = HasOne;

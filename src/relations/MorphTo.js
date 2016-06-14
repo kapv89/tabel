@@ -1,8 +1,8 @@
-import {assign, isString} from 'lodash';
+const {assign, isString} = require('lodash');
 
-import Relation from './Relation';
+const Relation = require('./Relation');
 
-export default class MorphTo extends Relation {
+class MorphTo extends Relation {
   constructor(ownerTable, toTables, typeField, foreignKey) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTables, typeField, foreignKey});
@@ -181,3 +181,5 @@ export default class MorphTo extends Relation {
     }
   }
 }
+
+module.exports = MorphTo;

@@ -1,34 +1,31 @@
 {
   "name": "tabel",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm with over knex.js which works with simple javascript objects and arrays",
-  "main": "lib/Orm.js",
+  "main": "src/Orm.js",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "scripts": {
-    "test": "babel-node --stage 1 test/orm/main.js",
-    "test:collisions": "babel-node --stage 1 test/collisions/main.js",
-    "build": "npm run clean && babel --stage 1 -D src/ --out-dir lib/",
-    "watch": "npm run clean && babel --stage 1 -w -D src/ --out-dir lib/",
-    "clean": "rm -rf lib/"
+    "test": "node test/orm/main.js",
+    "test:collisions": "node test/collisions/main.js"
   },
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "isusableobject": "^0.1.1",
-    "knex": "~0.9.0",
-    "kredis": "^1.0.1",
-    "lodash": "^3.10.1",
-    "md5": "^2.0.0",
-    "uuid": "^2.0.1"
+    "isusableobject": "^0.1.2",
+    "knex": "^0.11.5",
+    "kredis": "^1.0.2",
+    "lodash": "^4.13.1",
+    "md5": "^2.1.0",
+    "uuid": "^2.0.2"
   },
   "devDependencies": {
-    "babel": "^5.8.34",
-    "babel-eslint": "^4.1.6",
-    "eslint": "^1.10.3",
-    "eslint-plugin-babel": "^3.0.0",
-    "eslint-plugin-react": "^3.12.0",
-    "faker": "^3.0.1",
-    "mysql": "^2.10.2",
-    "pg": "^4.4.3"
+    "babel-eslint": "^6.0.4",
+    "eslint": "^2.12.0",
+    "faker": "^3.1.0",
+    "mysql": "^2.11.1",
+    "pg": "^5.1.0"
   }
 }

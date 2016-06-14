@@ -1,9 +1,9 @@
-import {assign, isArray} from 'lodash';
-import isUsableObject from 'isusableobject';
+const {assign, isArray} = require('lodash');
+const isUsableObject = require('isusableobject');
 
-import Relation from './Relation';
+const Relation = require('./Relation');
 
-export default class ManyToMany extends Relation {
+class ManyToMany extends Relation {
   constructor(ownerTable, toTable, pivotTable, foreignKey, otherKey, joiner=(() =>{})) {
     super(ownerTable);
     assign(this, {fromTable: ownerTable.fork(), toTable, pivotTable, foreignKey, otherKey});
@@ -77,7 +77,7 @@ export default class ManyToMany extends Relation {
     const keyDict = relatedModels.reduce((dict, m) => {
       const key = m.pivot[foreignKey];
 
-      if (! isArray(dict[key])) {
+      if (!isArray(dict[key])) {
         return assign(dict, {[key]: [m]});
       } else {
         return assign(dict, {[key]: dict[key].concat([m])});
@@ -348,3 +348,5 @@ export default class ManyToMany extends Relation {
     }
   }
 }
+
+module.exports = ManyToMany;
