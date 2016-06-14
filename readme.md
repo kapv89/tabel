@@ -1,5 +1,8 @@
 # Tabel
 
+### For node < 6.0.0 `npm install --save tabel@0.7`
+### For node >= 6.0.0 `npm install --save table@1`
+
 ## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed
 
 #### MIT License
