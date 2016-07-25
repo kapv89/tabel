@@ -37,7 +37,8 @@ class Orm {
       raw: this.raw.bind(this),
       migrator: this.migrator,
       cache: this.cache,
-      knex: this.knex
+      knex: this.knex,
+      scoper: this.scoper
     };
   }
 
@@ -118,6 +119,10 @@ class Orm {
     }
 
     return tbl;
+  }
+
+  scoper(scopes) {
+    return new Scoper(scopes);
   }
 
   // shorthand for table
