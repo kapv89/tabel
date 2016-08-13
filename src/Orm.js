@@ -3,6 +3,7 @@ const KRedis = require('kredis');
 const {merge, isString} = require('lodash');
 
 const Table = require('./Table');
+const Scoper = require('./Scoper');
 const migrator = require('./migrator');
 
 class Orm {
