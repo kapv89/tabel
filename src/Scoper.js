@@ -29,7 +29,7 @@
 
 import {isArray, isObject} from 'lodash';
 
-export default class Scoper {
+class Scoper {
   constructor(scopes=[]) {
     this.scopes = new Map();
 
@@ -95,3 +95,5 @@ export default class Scoper {
     }
   }
 }
+
+module.exports = Scoper;
