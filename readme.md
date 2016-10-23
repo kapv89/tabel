@@ -145,7 +145,7 @@ If you are not comfortable with keeping your db credentials in `package.json`, d
 - Paste the following in that file:
 
 ```js
-const migrate = require('tabel/tabel.migrate');
+const migrate = require('tabel/lib/migrate');
 // this is where your migration config is
 // shape given after these instructions
 const config = require('./config');
