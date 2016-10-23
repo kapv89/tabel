@@ -1,4 +1,4 @@
-function up(knex, Promise) {
+function up(knex) {
   <% if (d.tableName) { %>
   return knex.schema.createTable("<%= d.tableName %>", (t) => {
     t.increments();
@@ -7,7 +7,7 @@ function up(knex, Promise) {
   <% } %>
 }
 
-function down(knex, Promise) {
+function down(knex) {
   <% if (d.tableName) { %>
   return knex.schema.dropTable("<%= d.tableName %>");
   <% } %>

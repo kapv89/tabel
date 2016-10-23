@@ -45,7 +45,7 @@ class Orm {
 
   // raw expr helper
   raw(expr) {
-    return knex.raw(expr);
+    return this.knex.raw(expr);
   }
 
   // transaction helper

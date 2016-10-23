@@ -12,6 +12,7 @@
 
 - [Philosophy](#philosophy)
 - [Getting Started](#getting-started)
+- [Migrations](#migrations)
 - [Table Declarations](#table-declarations)
 - [Query Building](#query-building)
 - [Data Retrieval](#data-retrieval)
@@ -123,6 +124,17 @@ app.get('/posts', async (req, res) => {
 export default app;
 
 ```
+
+### Migrations
+
+Just add the following to your package.json to use migrations:
+```
+"scripts": {
+  "migrate": "tabel.migrate"
+}
+```
+Available commands `make`, `latest`, `rollback`, `version`, `reset`, `refresh`
+
 
 ### Table Declarations
 

@@ -1,24 +1,27 @@
 {
   "name": "tabel",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "repository": "https://github.com/fractaltech/tabel",
-  "description": "A simple orm with over knex.js which works with simple javascript objects and arrays",
+  "description": "A simple orm which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
   "scripts": {
-    "clean": "rm -rf lib/",
-    "build": "npm run clean && babel src --out-dir lib/",
+    "clean": "rm -rf lib/ tabel.migrate.js",
+    "build": "npm run clean && babel src --out-dir lib/ && cp lib/tabel.migrate.js . && chmod 755 tabel.migrate.js",
     "test": "babel-node test/orm/main.js",
     "test:collisions": "babel-node test/collisions/main.js"
+  },
+  "bin": {
+    "tabel.migrate": "./tabel.migrate.js"
   },
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "isusableobject": "^0.1.2",
-    "knex": "^0.11.5",
+    "knex": "^0.12.6",
     "kredis": "^1.0.2",
-    "lodash": "^4.13.1",
-    "md5": "^2.1.0",
-    "uuid": "^2.0.2"
+    "lodash": "^4.16.4",
+    "md5": "^2.2.1",
+    "uuid": "^2.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
