@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
@@ -13,7 +13,7 @@
     "test.migrate.custom": "babel-node test/migrate/main.js custom db=table_test host=localhost port=5432 username=dev password=dev migrations=knex_migrations"
   },
   "bin": {
-    "tabel.migrate": "./lib/tabel.migrate.js"
+    "tabel.migrate": "./lib/migrate.js"
   },
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",

@@ -1,4 +1,4 @@
-const migrate = require('../../src/tabel.migrate');
+const migrate = require('../../src/migrate');
 const Tabel = require('../../src/Orm');
 const config = require('../config');
 
