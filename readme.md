@@ -127,8 +127,8 @@ export default app;
 
 ### Migrations
 
-Just add the following to your package.json to use migrations:
-```
+For development purposes, assuming all developers will be using the same database and can have the same credentials for their local database, just add the following to your package.json to use migrations:
+```json
 "scripts": {
   "migrate": "tabel.migrate driver=<pg|mysql|sqlite> db=<dbname> host=<dbhost> port=<port> username=<username> password=<password> migrations=<migrations_table_name>"
 }
@@ -139,11 +139,35 @@ And use like this:
 npm run migrate <command> [...args]
 ```
 
+If you are not comfortable with keeping your db credentials in `package.json`, do the following:
 
-__Defaults:__
-1. __dbhost__: `localhost`
-2. __port__: `5432`
-3. __migrations__: `knex_migrations`
+- Create a file `migrate.js` in your project root
+- Paste the following in that file:
+
+```js
+const migrate = require('tabel/tabel.migrate');
+// this is where your migration config is
+// shape given after these instructions
+const config = require('./config');
+
+if (require.main === module) {
+  migrate(config, ...process.argv.slice(2));
+}
+```
+- Now run `node migrate.js` or make `migrate.js` an executable and run `./migrate.js`
+
+This is what config object looks like:
+```js
+{
+  driver: 'pg|mysql|sqlite', // works only for pg at the moment
+  db: 'dbname',
+  host: 'localhost', // defaults to localhost
+  port: 5432, // defaults to 5432
+  username: 'username', // required
+  password: 'password', // required
+  migrations: 'knex_migrations' // migrations table name, 'knex_migrations' is the default
+}
+```
 
 __Available commands__
 1. `make`: Make a new migration
