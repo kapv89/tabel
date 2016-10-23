@@ -1,17 +1,12 @@
 const path = require('path');
 const fileExists = require('file-exists');
+const {isString}= require('lodash');
+const isusableobject = require('isusableobject');
 
 const Orm = require('./Orm');
 
-function run(...args) {
-  const {configArgs, commandArgs} = separateArgs(args);
-
-  const config = {
-    host: 'localhost',
-    port: 5432,
-    migrations: 'knex_migrations',
-    ...argsToConfig(configArgs)
-  };
+function run(...params) {
+  const {config, args} = extractConfigAndArgs(...params);
 
   if (
     !(
@@ -70,9 +65,39 @@ migrations: 'knex_migrations'
   return migrator.mount({
     devDir: path.join(process.cwd(), 'migrations'),
     distDir: path.join(process.cwd(), 'migrations'),
-    getArgs: () => commandArgs,
+    getArgs: () => args,
     stub: fileExists(projectStubPath) ? projectStubPath : defaultStubPath
   });
+}
+
+function extractConfigAndArgs(first, ...rest) {
+  const defaults = {
+    host: 'localhost',
+    port: 5432,
+    migrations: 'knex_migrations'
+  };
+
+  if (isString(first)) {
+    const {configArgs, commandArgs} = separateArgs([first, ...rest]);
+
+    return {
+      config: {
+        ...defaults,
+        ...argsToConfig(configArgs)
+      },
+      args: commandArgs
+    };
+  } else if(isusableobject(first)) {
+    return {
+      config: {
+        ...defaults,
+        ...first
+      },
+      args: rest
+    };
+  } else {
+    throw new Error('invalid arguments');
+  }
 }
 
 function separateArgs(args) {
