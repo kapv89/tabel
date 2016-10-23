@@ -1,19 +1,19 @@
 {
   "name": "tabel",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
   "scripts": {
-    "clean": "rm -rf lib/ tabel.migrate.js",
-    "build": "npm run clean && babel src --out-dir lib/ && cp lib/tabel.migrate.js . && chmod 755 tabel.migrate.js",
+    "clean": "rm -rf lib/",
+    "build": "npm run clean && babel src --out-dir lib/",
     "test.orm": "babel-node test/orm/main.js",
     "test.collisions": "babel-node test/collisions/main.js",
     "test.migrate.default": "babel-node test/migrate/main.js default db=tabel_test host=localhost port=5432 username=dev password=dev migrations=knex_migrations",
     "test.migrate.custom": "babel-node test/migrate/main.js custom db=table_test host=localhost port=5432 username=dev password=dev migrations=knex_migrations"
   },
   "bin": {
-    "tabel.migrate": "./tabel.migrate.js"
+    "tabel.migrate": "./lib/tabel.migrate.js"
   },
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",
