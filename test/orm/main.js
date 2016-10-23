@@ -41,7 +41,7 @@ runTests(...process.argv.slice(2));
 
 function runTests(db) {
   if (!(db in config)) {
-    console.log('Usage: `npm run test:orm pg|mysql|sqlite`');
+    console.log('Usage: `npm run test.orm pg|mysql|sqlite`');
     console.log('Please provide the appropriate config too in `test/config.js`');
     return Promise.resolve();
   }

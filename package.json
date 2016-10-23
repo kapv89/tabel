@@ -7,8 +7,10 @@
   "scripts": {
     "clean": "rm -rf lib/ tabel.migrate.js",
     "build": "npm run clean && babel src --out-dir lib/ && cp lib/tabel.migrate.js . && chmod 755 tabel.migrate.js",
-    "test": "babel-node test/orm/main.js",
-    "test:collisions": "babel-node test/collisions/main.js"
+    "test.orm": "babel-node test/orm/main.js",
+    "test.collisions": "babel-node test/collisions/main.js",
+    "test.migrate.default": "babel-node test/migrate/main.js default db=tabel_test host=localhost port=5432 username=dev password=dev migrations=knex_migrations",
+    "test.migrate.custom": "babel-node test/migrate/main.js custom db=table_test host=localhost port=5432 username=dev password=dev migrations=knex_migrations"
   },
   "bin": {
     "tabel.migrate": "./tabel.migrate.js"
@@ -16,6 +18,7 @@
   "author": "Kapil Verma <kapv89@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
     "knex": "^0.12.6",
     "kredis": "^1.0.2",
@@ -31,6 +34,7 @@
     "eslint": "^2.12.0",
     "faker": "^3.1.0",
     "mysql": "^2.11.1",
-    "pg": "^5.1.0"
+    "pg": "^5.1.0",
+    "rimraf": "^2.5.4"
   }
 }

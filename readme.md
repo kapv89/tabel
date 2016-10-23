@@ -2,7 +2,7 @@
 
 ### `npm install --save table@1`
 
-## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed
+## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed. Right now works only with postgres.
 
 #### MIT License
 
@@ -130,10 +130,28 @@ export default app;
 Just add the following to your package.json to use migrations:
 ```
 "scripts": {
-  "migrate": "tabel.migrate"
+  "migrate": "tabel.migrate driver=<pg|mysql|sqlite> db=<dbname> host=<dbhost> port=<port> username=<username> password=<password> migrations=<migrations_table_name>"
 }
 ```
-Available commands `make`, `latest`, `rollback`, `version`, `reset`, `refresh`
+
+And use like this:
+```
+npm run migrate <command> [...args]
+```
+
+
+__Defaults:__
+1. __dbhost__: `localhost`
+2. __port__: `5432`
+3. __migrations__: `knex_migrations`
+
+__Available commands__
+1. `make`: Make a new migration
+2. `latest`: Migrate to latest migration
+3. `rollback`: Rollback the last batch of migrations
+4. `version`: View the number of current batch of migration
+5. `reset`: Reset all migrations
+6. `refresh`: Reset all migrations and migrate back to the latest
 
 
 ### Table Declarations

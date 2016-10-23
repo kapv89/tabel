@@ -1,12 +1,13 @@
 const {isString} = require('lodash');
+const path = require('path');
 
 function migrator(orm) {
   return {
     mount({
-      devDir='./src/migrations',
-      distDir='./lib/migrations',
+      devDir=path.join(process.cwd(), 'src', 'migrations'),
+      distDir=path.join(process.cwd(), 'lib', 'migrations'),
       getArgs=(() => process.argv.slice(2)),
-      stub=`${__dirname}/migration.babel.stub`
+      stub=path.join(__dirname, 'migration.babel.stub')
     }) {
       const knex = orm.knex;
       const args = getArgs();
