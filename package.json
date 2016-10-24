@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",

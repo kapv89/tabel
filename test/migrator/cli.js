@@ -1,5 +1,5 @@
 const config = require('../config');
 
-const migrate = require('../../src/migrate.cli');
+const migrate = require('../../src/migrate');
 
 migrate(config.pg);
