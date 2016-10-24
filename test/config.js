@@ -9,10 +9,6 @@ module.exports = {
         user: 'dev',
         password: 'dev'
       },
-      pool: {
-        min: 2,
-        max: 10
-      },
       migrations: 'knex_migrations'
     },
     redis: {
@@ -30,10 +26,6 @@ module.exports = {
         host: 'localhost',
         user: 'root',
         password: 'root'
-      },
-      pool: {
-        min: 2,
-        max: 10
       },
       migrations: 'knex_migrations'
     },

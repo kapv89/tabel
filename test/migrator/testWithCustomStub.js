@@ -3,37 +3,20 @@ const rimraf = require('rimraf');
 const path = require('path');
 const assert = require('assert');
 
-function run(migrate, orm, ...args) {
+function run(orm, migrator) {
   return cleanup(orm)
-    .then(() => createProjectStub())
-    .then(() => testMake(migrate, orm, ...args))
+    .then(() => testMake(orm, migrator))
     .then(() => cleanup(orm))
-    .then(() => orm.close())
   ;
 }
 
-function createProjectStub() {
-  return new Promise((resolve, reject) => fs.readFile(path.join(__dirname, 'custom.stub'), (err, data) => {
-    if (err) {
-      reject(err);
-    } else {
-      resolve(data);
-    }
-  })).then((data) => new Promise((resolve, reject) => fs.writeFile(path.join(process.cwd(), 'migration.stub'), data, (err) => {
-    if (err) {
-      reject(err);
-    } else {
-      resolve();
-    }
-  })));
-}
-
-function testMake(migrate, orm, ...args) {
+function testMake(orm, migrator) {
   console.log('testing make');
 
   const migrationsDir = path.join(process.cwd(), 'migrations');
+  const [devDir, distDir] = [migrationsDir, migrationsDir];
 
-  return migrate(...(args.concat(['make', 'Foo'])))
+  return migrator.mount({devDir, distDir, args: ['make', 'Foo'], stub: path.join(__dirname, 'custom.stub')})
     .then(() => new Promise((resolve, reject) => fs.readdir(migrationsDir, (err, files) => {
       if (err) {
         reject(err);
@@ -73,11 +56,10 @@ function cleanup(orm) {
 
   return Promise.all([
     knex.schema.dropTableIfExists('knex_migrations'),
+    knex.schema.dropTableIfExists('knex_migrations_lock'),
+    knex.schema.dropTableIfExists('test_custom'),
     new Promise((resolve) => (
       rimraf(path.join(process.cwd(), 'migrations'), () => resolve())
-    )),
-    new Promise((resolve) => (
-      rimraf(path.join(process.cwd(), 'mirgation.stub'), () => resolve())
     ))
   ]);
 }

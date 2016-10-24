@@ -3,26 +3,16 @@ const path = require('path');
 
 function migrator(orm) {
   return {
-    mount({
-      devDir=path.join(process.cwd(), 'src', 'migrations'),
-      distDir=path.join(process.cwd(), 'lib', 'migrations'),
-      getArgs=(() => process.argv.slice(2)),
-      stub=path.join(__dirname, 'migration.babel.stub')
-    }) {
+    mount({devDir, distDir, args=[], stub=path.join(__dirname, 'migration.stub')}) {
       const knex = orm.knex;
-      const args = getArgs();
 
       if (args.length === 0 || Object.keys(commands).indexOf(args[0]) === -1) {
         console.log('Available Commands:');
         console.log(Object.keys(commands).join('\n'));
 
-        return orm.close();
+        return Promise.resolve();
       } else {
-        return ((cmd, ...args) => {
-          return commands[cmd](knex, {devDir, distDir, stub}, ...args)
-            .then(() => orm.close())
-          ;
-        })(...args);
+        return ((cmd, ...args) => commands[cmd](knex, {devDir, distDir, stub}, ...args))(...args);
       }
     }
   };
