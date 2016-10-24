@@ -135,7 +135,7 @@ To use db migrations cli tool in your project, do the following
 
 ```js
 const migrate = require('tabel/lib/migrate');
-const ormConfig = require('./config');
+const ormConfig = require('./config'); // same as shown in "Getting Started"
 
 migrate(config);
 
@@ -143,6 +143,7 @@ migrate(config);
 - Now run `node migrate.js` or make `migrate.js` an executable and run `./migrate.js`
 
 __Available commands__
+
 1. `make`: Make a new migration
 2. `latest`: Migrate to latest migration
 3. `rollback`: Rollback the last batch of migrations
