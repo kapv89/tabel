@@ -176,8 +176,12 @@ class Table {
   c(col) {
     if (isArray(col)) {
       return col.map((c) => this.c(c));
-    } else if (isString(col)) {
+    }
+
+    if (isString(col)) {
       col = col.indexOf('.') > -1 ? col : `${this.tableName()}.${col}`;
+      col = col.indexOf('->') > -1 ? this.raw(col) : col;
+      return col;
     }
 
     return col;
