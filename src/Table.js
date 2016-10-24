@@ -179,9 +179,7 @@ class Table {
     }
 
     if (isString(col)) {
-      col = col.indexOf('.') > -1 ? col : `${this.tableName()}.${col}`;
-      col = col.indexOf('->') > -1 ? this.raw(col) : col;
-      return col;
+      return col.indexOf('.') > -1 ? col : `${this.tableName()}.${col}`;
     }
 
     return col;
