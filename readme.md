@@ -135,8 +135,6 @@ To use db migrations cli tool in your project, do the following
 
 ```js
 const migrate = require('tabel/lib/migrate');
-// this is where your migration config is
-// shape given after these instructions
 const ormConfig = require('./config');
 
 migrate(config);
