@@ -1,12 +1,12 @@
 {
   "name": "tabel",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
   "scripts": {
     "clean": "rm -rf lib/",
-    "build": "npm run clean && babel src --out-dir lib/",
+    "build": "npm run clean && babel src --out-dir lib/ && cp src/migration.stub lib/migration.stub",
     "test.orm": "babel-node test/orm/main.js",
     "test.collisions": "babel-node test/collisions/main.js",
     "test.migrator": "babel-node test/migrator/main.js",
