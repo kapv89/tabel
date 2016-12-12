@@ -1207,6 +1207,15 @@ class Table {
   }
 
   /**
+   * another version of del
+   * @param  {...mixed} args further conditions for deletion
+   * @return {Promise} promise for when deletion has completed
+   */
+  delete(...args) {
+    return this.del(...args);
+  }
+
+  /**
    * truncate the table
    * @return {Promise} promise for when truncate has completed
    */

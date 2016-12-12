@@ -1,8 +1,8 @@
-# Tabel
+# Tabel - node.js ORM for postgres
 
 ### `npm install --save table@1`
 
-## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed. Right now works only with postgres.
+## A simple orm for postgres built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed.
 
 #### MIT License
 
@@ -18,27 +18,21 @@
 - [Data Retrieval](#data-retrieval)
 - [Data Mutation](#data-mutation)
 - [Scopes and Joints and Forking](#scopes-and-joints-and-forking)
-- [Relationships](#relationships)
-- [Eager Loading](#eager-loading)
-- [Caching](#caching)
-- [Hooks](#hooks)
-- [Migrations](#migrations)
-- [Extending Table Classes](#extending-table-classes)
-- [Example Projects](#examples)
+- [Relationships and Eagerloading](#relationships-and-eagerloading)
 
 ### Philosophy
 
-**Tabel** was born out of the need felt for a simple Object-Relational-Mapper, nothing more.
+**Tabel** was born out of the need felt for a simple Object-Relational-Mapper for Postgres, nothing more.
 
 Its salient features are full fledged relation management, while working with simple
-Javascript objects and arrays.
+_javascript objects and arrays_. This fits right in with postgres' __jsonb__ data type.
 
 It is a thin layer over the really awesome [knex.js](http://knexjs.org/) query builder.
 It allows you to define table-gateways which can eager-load and manage relations, while giving you the
 ability to drop down to knex, or raw sql when you need to.
 
 This way, **Tabel** helps you with rapid development with relation management, etc, and steps out of your
-way if you need to take control of your database.
+way when you need to take control of your database.
 
 And since it works with plain javascript objects and arrays, its a breeze to make it work with other data sources like elastic-search etc. **Data is just data**.
 
@@ -46,7 +40,7 @@ And since it works with plain javascript objects and arrays, its a breeze to mak
 
 First you need to get an instance of **Tabel** orm. Its best that you define one orm instance(per db), and export `orm.exports` a module
 ```js
-import Tabel from 'tabel';
+const Tabel = require('tabel');
 
 const orm = new Tabel({
   db: {
@@ -74,7 +68,7 @@ const orm = new Tabel({
 
 // all the table definitions go here
 
-export default orm.exports;
+module.exports = orm.exports;
 /**
 This is what the exports look like:
 
@@ -112,16 +106,14 @@ orm.defineTable({
 
 // you can now use them like this in some other model, like your routes
 
-import express from 'express';
+const app = module.exports = require('express')();
 
-import {table} from orm;
+const {table} = require('orm');
 
 app.get('/posts', async (req, res) => {
   const posts = await table('posts').all();
   res.send({posts});
 });
-
-export default app;
 
 ```
 
@@ -558,7 +550,8 @@ based on the arguments provided to them.
 
  import {table} from './orm'; // refer to "Getting Started"
 
- table('posts').first()
+ table('posts').first();
+ table('posts').first('title', 'Foo');
  table('posts').first('published_on', '<', new Date());
  table('posts').first({is_active: true});
  table('posts').where('id', 'in', ids).first();
@@ -602,18 +595,284 @@ find(...args)
 
 ### Data Mutation
 
+There are three ways to mutate data using **Tabel**.
+1. Insert
+2. Update
+3. Delete
+
+All of them return a `Promise`. Details below:
+```js
+
+const {table} = require('orm');
+
+// Insert
+table('posts').insert({title: 'Foo', body: 'Lorem Ipsum'})
+  .then((model) => {
+    // inserted object. id will be included if `autoId` is true
+    return model
+  })
+;
+
+table('posts').insert([
+  {title: 'Bar', body: 'fizz buzz'},
+  {title: 'Baz', body: 'foo bar'}
+]).then((models) => {
+  // inserted array of objects. ids will be included if `autoId` is true
+  return models
+});
+
+// ------------------------------------------------------------------------
+
+// Update
+table('posts').where('title', 'Foo').update({title: 'Fizz', body: 'foo bar'})
+  .then(() => {
+    // nothing relevant returned in this sort of update
+    // perform next ops here
+  })
+;
+
+table('posts').update(post.id, {title: 'Bar', body: 'fizz buzz'})
+  .then((model) => {
+    // updated model returned
+    return model;
+  })
+;
+
+// ------------------------------------------------------------------------
+
+// Delete
+table('posts').where('title', 'Foo').delete()
+  .then(() => {
+    // nothing relevant returned
+    // perform next ops here
+  })
+;
+
+table('posts').delete(post.id);
+table('posts').delete('title', 'Foo');
+table('posts').delete({title: 'Foo'});
+table('posts').delete('title', '=', 'Foo')
+```
+
 ### Scopes and Joints and Forking
 
-### Relationships
+__Tabel__ brings in a few new concepts which help you make a domain-query-language to work with your database in context
+of your software. Using these concepts is explained below:
 
-### Eager Loading
+```js
 
-### Caching
+// Scopes
+// Use these to create a shorthand for often repeated query conditions
+orm.defineTable({
+  name: 'posts'
+  ...
+  scopes: {
+    // style of syntax is important, as these functions need to use Function.bind
+    // to set the proper value of `this`
+    wherePublished() {
+      return this.where('is_published', true);
+    }
+  }
+});
 
-### Hooks?
+// Now you can do
+const {table} = orm.exports;
+table('posts').wherePublished().all().then((posts) => {
+  // do something with posts
+});
 
-### Migrations
+// ----------------------------------------------------------------------
 
-### Extending Table Classes
+// Joints
+// You'd rarely use this feature, because of the awesome relationships.
+// Still, worth going through.
+orm.defineTable({
+  name: 'posts'
+  ...
+  joints: {
+    joinTagsPivot() {
+      return this.joint((q) => {
+        // knex.js join syntax works here
+        q.join('post_tag', 'post_tag.post_id', '=', 'posts.id');
+      });
+    },
 
-### Example Projects
+    joinTags() {
+      return this.joinTagsPivot().joint((q) => {
+        q.join('tags', 'post_tag.tag_id', '=', 'tags.id');
+      });
+    }
+  }
+});
+
+const {table} = orm.exports;
+
+// joints are like scopes, however, they are applied *only once*.
+// So you can do this:
+table('posts').joinTagsPivot().joinTags().where('tags.id', 'in', ids).all();
+// And the table 'post_tag' will only be joined once
+
+
+// ----------------------------------------------------------------------
+
+// Forking
+// best explained by an example
+
+const postsTable = table('posts').where('id', 'in', ids);
+const activePostsTable = postsTable.fork().where('is_active', true);
+const inactivePostsTable = postsTable.fork().where('is_active', false);
+
+Promise.all([postsTable.all(), activePostsTable.all(), inactivePostsTable.all()])
+  .then(([allPosts, activePosts, inactivePosts]) => {
+    // do something with this data
+  })
+;
+
+```
+
+### Relationships and Eagerloading
+
+__Tabel__ supports 8 different types of relationships between tables. The relationships of a table need to be defined
+along with table definition. Relationships also provide functionality to join related, pivot, and through tables in the current query.
+I seriously advice you to go through the code for relationships [here](https://github.com/fractaltech/tabel/tree/master/src/relations)
+to discover the full power they provide.
+
+```js
+orm.defineTable({
+  name: 'posts'
+  ...
+  relations: {
+    author() {
+      return this.belongsTo('users', 'user_id');
+    },
+
+    tags() {
+      return this.manyToMany('tags', 'post_tag', 'post_id', 'tag_id');
+    },
+
+    comments() {
+      return this.hasMany('comments', 'post_id');
+    }
+  }
+});
+
+// You can now do this:
+table('posts').eagerLoad('author', 'tags', 'comments').all();
+table('posts').author().join().where('users.username', '=', 'foo').all();
+table('posts').author().leftJoin().where('users.username', '=', 'foo').all();
+table('posts').tags().join().where('tags.name', 'in', tagNames).all();
+table('posts').tags().joinPivot().where('post_tag.tag_id', 'in', tagIds).all();
+table('posts').tags().leftJoinPivot().where('post_tag.tag_id', 'in', tagIds).all();
+
+```
+
+Different relationships given below:
+
+```js
+/**
+ * get a new hasOne relation
+ * @param  {string}  related related table name
+ * @param  {string}  foreignKey foreign-key on related table
+ * @param  {string}  key key to match with on this table
+ * @return {HasOne}  HasOne relation instance
+ */
+hasOne(related, foreignKey, key) {
+  // key = key || this.key();
+
+  return new HasOne(this, this.table(related), foreignKey, key);
+}
+
+/**
+ * get a new hasMany relation
+ * @param  {string}  related related table name
+ * @param  {string}  foreignKey foreign-key on related table
+ * @param  {string}  key key to match with on this table
+ * @return {HasMany} HasMany relation instance
+ */
+hasMany(related, foreignKey, key) {
+  key = key || this.key();
+
+  return new HasMany(this, this.table(related), foreignKey, key);
+}
+
+/**
+ * get a new hasManyThrough relation
+ * @param  {string}  related related table name
+ * @param  {string}  through through table name
+ * @param  {string}  firstKey foreign-key on through table
+ * @param  {string}  secondKey foreign-key on related table
+ * @return {HasManyThrough} HasManyThrough relation instance
+ */
+hasManyThrough(related, through, firstKey, secondKey) {
+  return new HasManyThrough(
+    this, this.table(related), this.table(through), firstKey, secondKey
+  );
+}
+
+/**
+ * get a new BelongsTo relation
+ * @param  {string} related related table name
+ * @param  {string} foreignKey foreign-key on this table
+ * @param  {string} otherKey key to match on other table
+ * @return {BelongsTo} BelongsTo relation instance
+ */
+belongsTo(related, foreignKey, otherKey) {
+  related = this.table(related);
+  otherKey = otherKey || related.key();
+
+  return new BelongsTo(this, related, foreignKey, otherKey);
+}
+
+/**
+ * get a new ManyToMany relation
+ * @param  {string} related related table name
+ * @param  {string} pivot pivot table name
+ * @param  {string} foreignKey foreign-key on this table
+ * @param  {string} otherKey other-key on this table
+ * @param  {function} joiner extra join conditions
+ * @return {ManyToMany} BelongsToMany relation instance
+ */
+manyToMany(related, pivot, foreignKey, otherKey, joiner=(() => {})) {
+  return new ManyToMany(
+    this, this.table(related), this.table(pivot), foreignKey, otherKey,
+    joiner
+  );
+}
+
+/**
+ * get a new MorphOne relation
+ * @param  {string} related related table name
+ * @param  {string} inverse inverse relation ship name
+ * @return {MorphOne} MorphOne relation instance
+ */
+morphOne(related, inverse) {
+  related = this.table(related);
+
+  return new MorphOne(this, related, related[inverse]());
+}
+
+/**
+ * get a new MorphMany relation
+ * @param  {string} related related table name
+ * @param  {string} inverse inverse relation ship name
+ * @return {MorphMany} MorphMany relation instance
+ */
+morphMany(related, inverse) {
+  related = this.table(related);
+
+  return new MorphMany(this, related, related[inverse]());
+}
+
+/**
+ * get a new MorphTo relation
+ * @param  {array} tables array of table names this relation morph's to
+ * @param  {string} typeField  type-field name
+ * @param  {string} foreignKey foreign-key name
+ * @return {MorphTo} MorphTo relation instance
+ */
+morphTo(tables, typeField, foreignKey) {
+  tables = tables.map((t) => this.table(t));
+
+  return new MorphTo(this, tables, typeField, foreignKey);
+}
+```
