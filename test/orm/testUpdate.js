@@ -12,7 +12,10 @@ function testUpdate(assert, orm) {
       })();
 
       return table('posts').update(allPosts[0].id, {created_at: yesterday})
-        .then((post) => assert.deepEqual(post.id, allPosts[0].id))
+        .then((post) => {
+          assert.deepEqual(post.id, allPosts[0].id);
+          console.log('update test passed');
+        })
       ;
     })
   ;

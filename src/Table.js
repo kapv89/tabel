@@ -41,7 +41,8 @@ const {
   isFunction,
   assign,
   merge,
-  toPlainObject
+  toPlainObject,
+  pick
 } = require('lodash');
 
 const Scope = require('./Scope');
@@ -234,6 +235,14 @@ class Table {
     forkedTable.scopeTrack = this.scopeTrack.fork();
 
     return forkedTable;
+  }
+
+  /**
+   * fork the table free of scopes
+   * @return {this.constructor} forked and clean table instance
+   */
+  fresh() {
+    return new this.constructor(this.orm);
   }
 
   /**
@@ -992,7 +1001,10 @@ class Table {
 
     if (count === true) {
       // result[0].count is how knex gives count query results
-      return parseInt(result[0].count, 10);
+      switch (this.orm.knex.client.config.client) {
+        case 'mysql': return parseInt(result[0]['count(*)'], 10);
+        default: return parseInt(result[0].count, 10);
+      }
     } else if (isArray(result)) {
       // processing an array of response
       return result.map((row) => this.processResult(row, {count}));
@@ -1344,8 +1356,10 @@ class Table {
           opFlags
         ));
 
-        return this.newQuery().returning('*')
-          .insert(model).then(([model]) => model);
+        switch (this.orm.knex.client.config.client) {
+          case 'mysql': return this.newQuery().insert(model).then(() => this.fresh().find(keyVal));
+          default: return this.newQuery().returning('*').insert(model).then(([model]) => model);
+        }
       })
     ;
   }
@@ -1374,7 +1388,7 @@ class Table {
       // that means we have been provided a key, and values to update
       // against it
       const [keyCondition, values] = args;
-      return this.whereKey(keyCondition).rawUpdate(values, {returning: true});
+      return this.whereKey(keyCondition).rawUpdate(values, {returning: true, keyCondition});
     } else if (args.length === 1) {
       // if we reach here then we can safely say that an object has
       // been provided to the update call
@@ -1388,7 +1402,7 @@ class Table {
    * @param  {Boolean} options.returning whether the results should be returned
    * @return {Promise} promise for when update has finished
    */
-  rawUpdate(values, {returning=false}) {
+  rawUpdate(values, {returning=false, keyCondition}) {
     const opFlags = {op: 'update'};
 
     return this.columns().then((columns) => {
@@ -1401,8 +1415,10 @@ class Table {
         // we return the first object when returning is true
         // use update method uses this, useful for handpicked updates
         // which is mostly the case with business logic
-        return this.query().returning('*').update(values)
-          .then(([model]) => model);
+        switch (this.orm.knex.client.config.client) {
+          case 'mysql': return this.query().update(values).then(() => this.fresh().whereKey(keyCondition).first());
+          default: return this.query().returning('*').update(values).then(([model]) => model);
+        }
       } else {
         // use this for batch updates. we don't return anything
         // in batch updates. if you want returning batch updates,

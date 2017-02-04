@@ -254,7 +254,7 @@ function testQueryBuilding(assert, orm) {
 
       console.log(
         table('posts').select('*', raw(`length('sasasd') as test`))
-          .whereRaw(`title like '?''`, ['%foo%'])
+          .whereRaw(`title like ?'`, ['%foo%'])
           .query().toString()
       );
     }).then(() => {
@@ -265,11 +265,21 @@ function testQueryBuilding(assert, orm) {
         q.from('photos').select('photos.*').distinct().as('t1');
       })
     ])).then(([count, knexResult]) => {
-      assert.deepEqual(
-        count,
-        parseInt(knexResult[0].count, 10),
-        'count works and creates a subquery'
-      );
+      switch (knex.client.config.client) {
+        case 'mysql':
+          assert.deepEqual(
+            count,
+            parseInt(knexResult[0]['count(*)'], 10),
+          )
+        ; break;
+        default:
+          assert.deepEqual(
+            count,
+            parseInt(knexResult[0].count, 10),
+            'count works and creates a subquery'
+          )
+        ; break;
+      }
     });
   });
 }
