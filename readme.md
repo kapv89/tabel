@@ -1,8 +1,8 @@
-# Tabel - node.js ORM for postgres
+# Tabel - node.js ORM
 
 ### `npm install --save table@1`
 
-## A simple orm for postgres built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed.
+## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed.
 
 #### MIT License
 
@@ -25,7 +25,7 @@
 **Tabel** was born out of the need felt for a simple Object-Relational-Mapper for Postgres, nothing more.
 
 Its salient features are full fledged relation management, while working with simple
-_javascript objects and arrays_. This fits right in with postgres' __jsonb__ data type.
+_javascript objects and arrays_.
 
 It is a thin layer over the really awesome [knex.js](http://knexjs.org/) query builder.
 It allows you to define table-gateways which can eager-load and manage relations, while giving you the
