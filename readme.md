@@ -1,7 +1,5 @@
 # Tabel - node.js ORM for PostgreSQL
 
-### `npm install --save table@2`
-
 ## A simple orm for PostgreSQL, built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed.
 
 #### MIT License
