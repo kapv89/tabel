@@ -1,6 +1,6 @@
 # Tabel - node.js ORM for PostgreSQL
 
-### `npm install --save table@1`
+### `npm install --save table@2`
 
 ## A simple orm built over [knex.js](http://knexjs.org/) which works with simple javascript objects and arrays. More of a table gateway that can behave like an orm, and scale back down to a a table-gateway when needed.
 
@@ -31,14 +31,16 @@ It is a thin layer over the really awesome [knex.js](http://knexjs.org/) query b
 It allows you to define table-gateways which can eager-load and manage relations, while giving you the
 ability to drop down to knex, or raw sql when you need to.
 
-This way, **Tabel** helps you with rapid development with relation management, etc, and steps out of your
+This way, **Tabel** helps you with rapid development by providing relation management and helping you define a domain-query-language, and steps out of your
 way when you need to take control of your database.
 
-And since it works with plain javascript objects and arrays, its a breeze to make it work with other data sources like elastic-search etc. **Data is just data**.
+And since it works with plain javascript objects and arrays, its a breeze to make it work with other data sources like elastic-search, mongo-db, or even other relational databases.
 
 ### Getting Started
 
-First you need to get an instance of **Tabel** orm. Its best that you define one orm instance(per db), and export `orm.exports` a module
+First you need to create an instance of **Tabel** orm. Its best that you define one orm instance per db, and export `orm.exports` as a module.
+Example given below for a single database.
+
 ```js
 const Tabel = require('tabel');
 
@@ -129,7 +131,7 @@ To use db migrations cli tool in your project, do the following
 const migrate = require('tabel/lib/migrate');
 const ormConfig = require('./config'); // same as shown in "Getting Started"
 
-migrate(config);
+migrate(ormConfig);
 
 ```
 - Now run `node migrate.js` or make `migrate.js` an executable and run `./migrate.js`
@@ -141,7 +143,7 @@ __Available commands__
 3. `rollback`: Rollback the last batch of migrations
 4. `version`: View the number of current batch of migration
 5. `reset`: Reset all migrations
-6. `refresh`: Reset all migrations and migrate back to the latest
+6. `refresh`: Reset all migrations and migrate back to the latest migration
 
 
 ### Table Declarations
@@ -162,8 +164,7 @@ orm.defineTable({
     // uuid for your inserts. The orm checks for uniqueness of the uuid
     // when its generating it.
     // Can generate composite keys.
-    // If using autoId on postgresql, use uuid column for your key(s)
-    // If using autoId on any other db, use a 36 length varchar
+    // While using autoId on postgresql, use uuid column for your key(s)
 
     perPage: 25,
     // standard batch size per page used by `forPage` method
@@ -192,7 +193,7 @@ orm.defineTable({
 ```
 
 ### Query Building
-Query building in **Tabel** is a very thin layer over [**knex.js**](http://knexjs.org), along
+The query building part of **Tabel** is a very thin layer over [**knex.js**](http://knexjs.org), along
 with caching and relation eager-loading facilities. Below is a list of all query building methods
 offered. All these methods are **chainable**, and return the instance of class `Table`
 that they are called on
@@ -201,7 +202,7 @@ that they are called on
 /**
  * Usage example for query building:
  */
-import {table} from './orm'; // refer to "Getting Started" section
+const {table} = require('./orm'); // refer to "Getting Started" section
 
 const posts = await table('posts').where('title', '=', 'fizz').orWhere('title', '=', 'buzz').all();
 
@@ -217,8 +218,10 @@ table('tags').whereRaw(`lower(name) like '%'||lower(?)||'%'`, 'foo').all();
 
 // suppose 'post_tag' is a table containing the columns 'post_id' & 'tag_id'
 table('post_tag').whereIn(['post_id', 'tag_id'], [{post_id: 1, tag_id: 1}, {post_id: 1, tag_id: 2}]).all()
+```
 
-
+All query building methods given below:
+```js
 /**
  * don't scope any rows
  * @return {this} current instance
@@ -548,7 +551,7 @@ based on the arguments provided to them.
  * Usage example for `first`. Use others similarly.
  */
 
- import {table} from './orm'; // refer to "Getting Started"
+ const {table} = require('./orm'); // refer to "Getting Started"
 
  table('posts').first();
  table('posts').first('title', 'Foo');
@@ -556,8 +559,10 @@ based on the arguments provided to them.
  table('posts').first({is_active: true});
  table('posts').where('id', 'in', ids).first();
  table('posts').where('published_on', '<', new Date()).first({is_active: true});
+```
 
-
+List of data retrieval methods given below:
+```js
 /**
  * get the first row for the scoped query
  * @param  {...mixed} args conditions for scoping the query
@@ -603,7 +608,7 @@ There are three ways to mutate data using **Tabel**.
 All of them return a `Promise`. Details below:
 ```js
 
-const {table} = require('orm');
+const {table} = require('./orm');
 
 // Insert
 table('posts').insert({title: 'Foo', body: 'Lorem Ipsum'})
