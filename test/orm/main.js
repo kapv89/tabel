@@ -39,14 +39,8 @@ process.on('unhandledRejection', err => { throw err; });
 
 runTests(...process.argv.slice(2));
 
-function runTests(db) {
-  if (!(db in config)) {
-    console.log('Usage: `npm run test.orm pg|mysql|sqlite`');
-    console.log('Please provide the appropriate config too in `test/config.js`');
-    return Promise.resolve();
-  }
-
-  const orm = new Tabel(config[db]);
+function runTests() {
+  const orm = new Tabel(config);
 
   return teardownTables(orm).then(() => setupTables(orm))
     .then(() => [

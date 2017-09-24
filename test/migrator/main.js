@@ -7,14 +7,13 @@ const testWithCustomStub = require('./testWithCustomStub');
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
 
-function run(mode, db) {
-  if (['custom', 'default'].indexOf(mode) === -1 && !(db in config)) {
-    console.log('Usage: `npm run test.migrate default|custom pg|mysql|sqlite`');
-    console.log('Please provide the appropriate config too in `test/config.js`');
+function run(mode) {
+  if (['custom', 'default'].indexOf(mode) === -1) {
+    console.log('Usage: `npm run test.migrate default|custom`');
     return Promise.resolve();
   }
 
-  const orm = new Tabel(config[db]);
+  const orm = new Tabel(config);
   const {migrator} = orm.exports;
 
   return (() => (

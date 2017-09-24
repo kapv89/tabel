@@ -1001,10 +1001,7 @@ class Table {
 
     if (count === true) {
       // result[0].count is how knex gives count query results
-      switch (this.orm.knex.client.config.client) {
-        case 'mysql': return parseInt(result[0]['count(*)'], 10);
-        default: return parseInt(result[0].count, 10);
-      }
+      return parseInt(result[0].count, 10);
     } else if (isArray(result)) {
       // processing an array of response
       return result.map((row) => this.processResult(row, {count}));
@@ -1356,10 +1353,7 @@ class Table {
           opFlags
         ));
 
-        switch (this.orm.knex.client.config.client) {
-          case 'mysql': return this.newQuery().insert(model).then(() => this.fresh().find(keyVal));
-          default: return this.newQuery().returning('*').insert(model).then(([model]) => model);
-        }
+        return this.newQuery().returning('*').insert(model).then(([model]) => model);
       })
     ;
   }
@@ -1415,10 +1409,7 @@ class Table {
         // we return the first object when returning is true
         // use update method uses this, useful for handpicked updates
         // which is mostly the case with business logic
-        switch (this.orm.knex.client.config.client) {
-          case 'mysql': return this.query().update(values).then(() => this.fresh().whereKey(keyCondition).first());
-          default: return this.query().returning('*').update(values).then(([model]) => model);
-        }
+        return this.query().returning('*').update(values).then(([model]) => model);
       } else {
         // use this for batch updates. we don't return anything
         // in batch updates. if you want returning batch updates,

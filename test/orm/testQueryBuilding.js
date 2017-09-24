@@ -265,21 +265,11 @@ function testQueryBuilding(assert, orm) {
         q.from('photos').select('photos.*').distinct().as('t1');
       })
     ])).then(([count, knexResult]) => {
-      switch (knex.client.config.client) {
-        case 'mysql':
-          assert.deepEqual(
-            count,
-            parseInt(knexResult[0]['count(*)'], 10),
-          )
-        ; break;
-        default:
-          assert.deepEqual(
-            count,
-            parseInt(knexResult[0].count, 10),
-            'count works and creates a subquery'
-          )
-        ; break;
-      }
+      assert.deepEqual(
+        count,
+        parseInt(knexResult[0].count, 10),
+        'count works and creates a subquery'
+      );
     });
   });
 }

@@ -12,14 +12,14 @@ process.on('unhandledRejection', err => { throw err; });
 
 runTests(...process.argv.slice(2));
 
-function runTests(db, numTestCases, chunk) {
-  if (!(db in config) || !isFinite(parseInt(numTestCases, 10) || !isFinite(parseInt(chunk, 10)))) {
-    console.log('Usage: `npm run test.collisions [pg|mysql|sqlite] [numTestCases] [chunk]`');
+function runTests(numTestCases, chunk) {
+  if (!isFinite(parseInt(numTestCases, 10) || !isFinite(parseInt(chunk, 10)))) {
+    console.log('Usage: `npm run test.collisions [numTestCases] [chunk]`');
     console.log('Please provide the appropriate config too in `test/config.js`');
     return Promise.resolve();
   }
 
-  const {knex, table, orm} = new Tabel(config[db]).exports;
+  const {knex, table, orm} = new Tabel(config).exports;
 
   return knex.schema.dropTableIfExists('collisions')
     .then(() => knex.schema.createTable('collisions', (t) => {
