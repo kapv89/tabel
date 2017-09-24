@@ -1,4 +1,4 @@
-# Tabel - node.js ORM
+# Tabel - node.js ORM for PostgreSQL
 
 ### `npm install --save table@1`
 
@@ -22,7 +22,7 @@
 
 ### Philosophy
 
-**Tabel** was born out of the need felt for a simple Object-Relational-Mapper for Postgres, nothing more.
+**Tabel** was born out of the need felt for a simple Object-Relational-Mapper for PostgreSQL, nothing more.
 
 Its salient features are full fledged relation management, while working with simple
 _javascript objects and arrays_.
@@ -162,7 +162,7 @@ orm.defineTable({
     // uuid for your inserts. The orm checks for uniqueness of the uuid
     // when its generating it.
     // Can generate composite keys.
-    // If using autoId on postgres, use uuid column for your key(s)
+    // If using autoId on postgresql, use uuid column for your key(s)
     // If using autoId on any other db, use a 36 length varchar
 
     perPage: 25,
@@ -212,7 +212,7 @@ postsTable.where('is_active', true);
 
 postsTable.all().then((posts) => { /* do things with `posts` here */});
 
-// the || thing here postgres string concatenation dialect
+// the || thing here postgresql string concatenation dialect
 table('tags').whereRaw(`lower(name) like '%'||lower(?)||'%'`, 'foo').all();
 
 // suppose 'post_tag' is a table containing the columns 'post_id' & 'tag_id'
