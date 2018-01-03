@@ -41,8 +41,7 @@ const {
   isFunction,
   assign,
   merge,
-  toPlainObject,
-  pick
+  toPlainObject
 } = require('lodash');
 
 const Scope = require('./Scope');
@@ -1177,6 +1176,20 @@ class Table {
   }
 
   /**
+   * perform a reduce operation on your scoped set of rows, by row
+   * @param {function} reducer reducer of a row
+   * @param {mixed} initialVal initial value for the reduce operation
+   * @return {mixed} result of the reduce operation
+   */
+  reduce(reducer=(() => {}), initialVal=null) {
+    return this.orderByRaw(
+      `(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}::text`).join(' || ')}) desc`
+    ).batchReduce(500, (batchInitialVal, models) => {
+      return models.reduce((val, model) => reducer(val, model), batchInitialVal);
+    }, initialVal);
+  }
+
+  /**
    * find a single model for supplied conditions
    * @param  {...mixed} args conditions for finding the model
    * @return {Promise} promise for found model
@@ -1376,9 +1389,7 @@ class Table {
    * @return {Promise} promise for when updation has completed
    */
   update(...args) {
-    if (args.length === 0) {
-      throw new Error('Invalid update');
-    } else if (args.length >= 2) {
+    if (args.length >= 2) {
       // that means we have been provided a key, and values to update
       // against it
       const [keyCondition, values] = args;
@@ -1387,6 +1398,8 @@ class Table {
       // if we reach here then we can safely say that an object has
       // been provided to the update call
       return this.rawUpdate(args[0], {});
+    } else {
+      return Promise.reject(new Error('Invalid update'));
     }
   }
 
@@ -1396,7 +1409,7 @@ class Table {
    * @param  {Boolean} options.returning whether the results should be returned
    * @return {Promise} promise for when update has finished
    */
-  rawUpdate(values, {returning=false, keyCondition}) {
+  rawUpdate(values, {returning=false}) {
     const opFlags = {op: 'update'};
 
     return this.columns().then((columns) => {
