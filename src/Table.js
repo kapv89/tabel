@@ -45,6 +45,7 @@ const {
 } = require('lodash');
 
 const Scope = require('./Scope');
+const Scoper = require('./Scoper');
 const Track = require('./Track');
 
 const HasOne = require('./relations/HasOne');
@@ -1201,6 +1202,18 @@ class Table {
    */
   map(map=(() => {})) {
     return this.scope((q) => { q._orm.map = map; }, 'map');
+  }
+
+  /**
+   * apply a scoper on the table
+   * @param {...mixed} scoper, or scoper config to be applied on the table
+   * @param {object} params for applying the scoper
+   * @return {this} current table instance
+   */
+  applyScoper(scoper={}, params={}) {
+    scoper = scoper instanceof Scoper ? scoper : (new Scoper(scoper));
+
+    return scoper.apply(this, params);
   }
 
   /**
