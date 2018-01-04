@@ -34,6 +34,7 @@ const testMorphManyHelpers = require('./testMorphManyHelpers');
 const testMorphOneHelpers = require('./testMorphOneHelpers');
 const testMorphToHelpers = require('./testMorphToHelpers');
 const testReduce = require('./testReduce');
+const testMap = require('./testMap');
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
@@ -61,7 +62,8 @@ function runTests() {
       testMorphManyHelpers,
       testMorphOneHelpers,
       testMorphToHelpers,
-      testReduce
+      testReduce,
+      testMap
     ].reduce((chain, test) => chain.then(() => test(assert, orm)), Promise.resolve()))
     .then(() => teardownTables(orm))
     .then(() => orm.close())

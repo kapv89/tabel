@@ -119,7 +119,10 @@ class Table {
       trx: null,
 
       // relations to be eagerloaded on the query
-      eagerLoads: {}
+      eagerLoads: {},
+
+      // map to be applied to the query result
+      map: (m) => m
     };
 
     return q;
@@ -1111,6 +1114,8 @@ class Table {
       return this.processResult(models);
     }).then((models) => {
       return this.loadRelations(models, q._orm.eagerLoads);
+    }).then((models) => {
+      return models.map((m) => q._orm.map(m));
     });
   }
 
@@ -1187,6 +1192,15 @@ class Table {
     ).batchReduce(500, (batchInitialVal, models) => {
       return models.reduce((val, model) => reducer(val, model), batchInitialVal);
     }, initialVal);
+  }
+
+  /**
+   * perform a map on your scoped set of rows, by row
+   * @param {function} map map of a row
+   * @return {mixed} result of map
+   */
+  map(map=(() => {})) {
+    return this.scope((q) => { q._orm.map = map; }, 'map');
   }
 
   /**
