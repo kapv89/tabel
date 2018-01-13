@@ -123,7 +123,7 @@ class Table {
       eagerLoads: {},
 
       // map to be applied to the query result
-      map: (m) => m
+      maps: []
     };
 
     return q;
@@ -1116,7 +1116,12 @@ class Table {
     }).then((models) => {
       return this.loadRelations(models, q._orm.eagerLoads);
     }).then((models) => {
-      return models.map((m) => q._orm.map(m));
+      return models.map((m) => {
+        return q._orm.maps.length === 0 ?
+          m :
+          q._orm.maps.reduce((m, map) => map(m), m)
+        ;
+      });
     });
   }
 
@@ -1201,7 +1206,7 @@ class Table {
    * @return {mixed} result of map
    */
   map(map=(() => {})) {
-    return this.scope((q) => { q._orm.map = map; }, 'map');
+    return this.scope((q) => { q._orm.maps.push(map); }, 'map');
   }
 
   /**
