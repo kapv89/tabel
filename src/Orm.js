@@ -4,6 +4,7 @@ const {merge, isString} = require('lodash');
 
 const Table = require('./Table');
 const Scoper = require('./Scoper');
+const Shape = require('./Shape');
 const migrator = require('./migrator');
 
 class Orm {
@@ -39,7 +40,8 @@ class Orm {
       migrator: this.migrator,
       cache: this.cache,
       knex: this.knex,
-      scoper: this.scoper
+      scoper: this.scoper,
+      shape: this.shape
     };
   }
 
@@ -124,6 +126,10 @@ class Orm {
 
   scoper(scopes) {
     return new Scoper(scopes);
+  }
+
+  shape(checks) {
+    return new Shape(checks);
   }
 
   // shorthand for table

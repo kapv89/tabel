@@ -1,8 +1,8 @@
 {
   "name": "tabel",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "repository": "https://github.com/fractaltech/tabel",
-  "description": "A simple orm which works with simple javascript objects and arrays",
+  "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
   "scripts": {
     "clean": "rm -rf lib/",
@@ -18,7 +18,7 @@
     "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
     "knex": "^0.12.6",
-    "kredis": "^1.0.2",
+    "kredis": "^1.0.3",
     "lodash": "^4.16.4",
     "md5": "^2.2.1",
     "uuid": "^2.0.3"

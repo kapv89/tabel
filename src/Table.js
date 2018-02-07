@@ -63,7 +63,7 @@ class Table {
     this.scopeTrack = new Track();
 
     if (this.orm.cache) {
-      this.cache = this.orm.cache.hash(this.tableName());
+      this.cache = this.orm.cache.hash(`tabel__${this.tableName()}`);
     }
   }
 
@@ -114,7 +114,6 @@ class Table {
       // used by cache processor
       cacheEnabled: false,
       cacheLifetime: null,
-      destroyCache: false,
 
       // transaction being used on the query
       trx: null,
@@ -858,14 +857,6 @@ class Table {
   }
 
   /**
-   * apply a scope which sets the flag for destruction of cache
-   * @return {this} current instance
-   */
-  uncache() {
-    return this.scope((q) => { q._orm.destroyCache = true; }, 'uncache');
-  }
-
-  /**
    * apply a debug scope on the query
    * @param {Boolean} flag true/false
    * @return {this} current instance
@@ -953,19 +944,14 @@ class Table {
   }
 
   /**
-   * uncaches results of a query if needed
-   * @param  {knex.query} q query being used to fetch result
-   * @return {Promise} a promise of the query destroyCache disabled
+   * uncache the query chain
+   * @return {Promise} current instance
    */
-  uncacheQueryIfNeeded(q) {
-    if (q._orm.destroyCache) {
-      return this.cache.del(this.queryCacheKey(q)).then(() => {
-        q._orm.destroyCache = false;
-        return q;
-      });
-    } else {
-      return Promise.resolve(q);
-    }
+  uncache() {
+    const q = this.query();
+    const key = this.queryCacheKey(q);
+
+    return this.cache.del(key).then(() => this);
   }
 
   /**
@@ -1109,18 +1095,13 @@ class Table {
 
     const q = this.query();
 
-    return this.uncacheQueryIfNeeded(q).then(() => {
-      return this.fetchResultsFromCacheOrDatabase(q);
-    }).then((models) => {
+    return this.fetchResultsFromCacheOrDatabase(q).then((models) => {
       return this.processResult(models);
     }).then((models) => {
       return this.loadRelations(models, q._orm.eagerLoads);
     }).then((models) => {
       return models.map((m) => {
-        return q._orm.maps.length === 0 ?
-          m :
-          q._orm.maps.reduce((m, map) => map(m), m)
-        ;
+        return q._orm.maps.reduce((m, map) => map(m), m);
       });
     });
   }
@@ -1152,11 +1133,27 @@ class Table {
       })
     );
 
-    return this.uncacheQueryIfNeeded(q).then(() => {
-      return this.fetchResultsFromCacheOrDatabase(q);
-    }).then((result) => {
+    return this.fetchResultsFromCacheOrDatabase(q).then((result) => {
       return this.processResult(result, {count: true});
     });
+  }
+
+  /**
+   * check whether an 'orderBy' or an 'orderByRaw' clause exists
+   * in the this.scopeTrack. If not, return a fork with an orderBy clause
+   * based on key-columns
+   * @return {Table} ordered fork of current table
+   */
+  orderedFork() {
+    const labels = this.scopeTrack.scopes.map(({label}) => label);
+
+    if (labels.indexOf('orderBy') > -1 || labels.indexOf('orderByRaw') > -1) {
+      return this.fork();
+    } else {
+      return this.fork().orderByRaw(
+        `(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}::text`).join(` || '-' || `)}) desc`
+      );
+    }
   }
 
   /**
@@ -1168,7 +1165,7 @@ class Table {
    */
   batchReduce(batchSize=1000, reducer=(() => {}), initialVal=null) {
     const reduceBatchN = (batchNum, batchInitialVal) => {
-      return this.fork().limit(batchSize).offset((batchNum-1) * batchSize).all()
+      return this.orderedFork().limit(batchSize).offset((batchNum-1) * batchSize).all()
         .then((models) => {
           try {
             const batchResult = reducer(batchInitialVal, models);
@@ -1193,9 +1190,7 @@ class Table {
    * @return {mixed} result of the reduce operation
    */
   reduce(reducer=(() => {}), initialVal=null) {
-    return this.orderByRaw(
-      `(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}::text`).join(' || ')}) desc`
-    ).batchReduce(500, (batchInitialVal, models) => {
+    return this.orderedFork().batchReduce(1000, (batchInitialVal, models) => {
       return models.reduce((val, model) => reducer(val, model), batchInitialVal);
     }, initialVal);
   }
@@ -1425,7 +1420,7 @@ class Table {
       // that means we have been provided a key, and values to update
       // against it
       const [keyCondition, values] = args;
-      return this.whereKey(keyCondition).rawUpdate(values, {returning: true, keyCondition});
+      return this.whereKey(keyCondition).rawUpdate(values, {returning: true});
     } else if (args.length === 1) {
       // if we reach here then we can safely say that an object has
       // been provided to the update call
