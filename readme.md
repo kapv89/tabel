@@ -6,7 +6,7 @@
 
 `npm install --save tabel`
 
-[Read the docs](http://tabel.fractaltech.in).
+#### [Read the docs](http://tabel.fractaltech.in).
 
 Following tests are available:
 1. `npm run test.orm`
