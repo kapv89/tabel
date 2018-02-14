@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
