@@ -25,17 +25,10 @@ const testDelete = require('./testDelete');
 const testEagerLoads = require('./testEagerLoads');
 const testScopesAndJoints = require('./testScopesAndJoints');
 const testRelationJoints = require('./testRelationJoints');
-const testBelongsToHelpers = require('./testBelongsToHelpers');
-const testManyToManyHelpers = require('./testManyToManyHelpers');
-const testHasManyHelpers = require('./testHasManyHelpers');
-const testHasManyThroughHelpers = require('./testHasManyThroughHelpers');
-const testHasOneHelpers = require('./testHasOneHelpers');
-const testMorphManyHelpers = require('./testMorphManyHelpers');
-const testMorphOneHelpers = require('./testMorphOneHelpers');
-const testMorphToHelpers = require('./testMorphToHelpers');
 const testReduce = require('./testReduce');
 const testMap = require('./testMap');
 const testShape = require('./testShape');
+const testCache = require('./testCache');
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
@@ -55,17 +48,10 @@ function runTests() {
       testEagerLoads,
       testScopesAndJoints,
       testRelationJoints,
-      testBelongsToHelpers,
-      testManyToManyHelpers,
-      testHasManyHelpers,
-      testHasManyThroughHelpers,
-      testHasOneHelpers,
-      testMorphManyHelpers,
-      testMorphOneHelpers,
-      testMorphToHelpers,
       testReduce,
       testMap,
-      testShape
+      testShape,
+      testCache
     ].reduce((chain, test) => chain.then(() => test(assert, orm)), Promise.resolve()))
     .then(() => teardownTables(orm))
     .then(() => orm.close())

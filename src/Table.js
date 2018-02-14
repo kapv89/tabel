@@ -249,7 +249,7 @@ class Table {
 
   /**
    * helper to refer to other tables. carries over transaction
-   * and cache settings
+   * and settings
    * @param  {string} tableName name of table you want
    * @return {Table} table instance for tableName
    */
@@ -260,14 +260,6 @@ class Table {
 
     if (q._orm.trx !== null) {
       tbl.transacting(q._orm.trx);
-    }
-
-    if (q._orm.cacheEnabled) {
-      tbl.cache(q._orm.cacheLifetime);
-    }
-
-    if (q._orm.destroyCache) {
-      tbl.uncache();
     }
 
     return tbl;
@@ -852,8 +844,11 @@ class Table {
    * @param  {int} lifetime lifetime in milliseconds
    * @return {this} current instance
    */
-  cache(lifetime) {
-    return this.scope((q) => { q._orm.cacheEnabled = true; q._orm.cacheLifetime = lifetime; }, 'cache');
+  remember(lifetime) {
+    return this.scope((q) => {
+      q._orm.cacheEnabled = true;
+      q._orm.cacheLifetime = lifetime;
+    }, 'cache');
   }
 
   /**
@@ -935,46 +930,15 @@ class Table {
   }
 
   /**
-   * returns key which will be used to cache a query's result
-   * @param  {knex.query} q the query which is being used to fetch result
-   * @return {string} md5 hash of the query
-   */
-  queryCacheKey(q) {
-    return md5(q.toString());
-  }
-
-  /**
    * uncache the query chain
+   * @param {options} options whether we are forgetting count or rows
    * @return {Promise} current instance
    */
-  uncache() {
-    const q = this.query();
+  forget(options={count: false}) {
+    const q = options.count ? this.countQuery() : this.query();
     const key = this.queryCacheKey(q);
 
     return this.cache.del(key).then(() => this);
-  }
-
-  /**
-   * fetches results for the query from cache or database
-   * @param  {knex.query} q query being used to fetch the result
-   * @return {Promise} promise of object {q, result}
-   */
-  fetchResultsFromCacheOrDatabase(q) {
-    if (q._orm.cacheEnabled) {
-      const key = this.queryCacheKey(q);
-
-      return this.cache.get(key).then((result) => {
-        if (result !== null) {
-          return result;
-        } else {
-          return q.then((result) => {
-            return this.cache(key, result, q._orm.cacheLifetime).then(() => result);
-          });
-        }
-      });
-    } else {
-      return q.then((result) => result);
-    }
   }
 
   /**
@@ -1071,6 +1035,28 @@ class Table {
   }
 
   /**
+   * returns key which will be used to cache a query's result
+   * @param  {knex.query} q the query which is being used to fetch result
+   * @return {string} md5 hash of the query
+   */
+  queryCacheKey(q) {
+    const queryStr = q.toString();
+
+    const eagerLoadsStr = Object.keys(q._orm.eagerLoads)
+      .map((rel) => ({rel, constraint: q._orm.eagerLoads[rel]}))
+      .slice(0).sort((a, b) => {
+        return a.rel < b.rel ? -1 : 1;
+      })
+      .map(({rel, constraint}) => {
+        return `${rel}:${constraint.toString()}`;
+      })
+      .join('-')
+    ;
+
+    return [queryStr, eagerLoadsStr].map((s) => md5(s)).join('-');
+  }
+
+  /**
    * get the first row for the scoped query
    * @param  {...mixed} args conditions for scoping the query
    * @return {Promise} promise which resolves the result
@@ -1095,15 +1081,56 @@ class Table {
 
     const q = this.query();
 
-    return this.fetchResultsFromCacheOrDatabase(q).then((models) => {
-      return this.processResult(models);
-    }).then((models) => {
-      return this.loadRelations(models, q._orm.eagerLoads);
-    }).then((models) => {
-      return models.map((m) => {
-        return q._orm.maps.reduce((m, map) => map(m), m);
+    // 1. Try to fetch results from cache
+    // 2. If there are any cached results, return results from cache, apply map to them, and return
+    // 3. If there aren't any cached results, run the query, get results, load relations
+    // 4. Cache the resulting dataset if needed
+    // 5. Apply maps to resulting dataset, and return
+
+    if (q._orm.cacheEnabled) {
+      const cacheKey = this.queryCacheKey(q);
+
+      return this.cache.get(cacheKey, null).then((models) => {
+        if (models === null) {
+          return q
+            .then((models) => this.processResult(models))
+            .then((models) => this.loadRelations(models, q._orm.eagerLoads))
+            .then((models) => {
+              return this.cache.set(cacheKey, models, q._orm.cacheLifetime).then(() => models);
+            })
+            .then((models) => models.map((m) => q._orm.maps.reduce((m, map) => map(m), m)))
+          ;
+        } else {
+          return models.map((m) => q._orm.maps.reduce((m, map) => map(m), m));
+        }
       });
-    });
+    } else {
+      return q
+        .then((models) => this.processResult(models))
+        .then((models) => this.loadRelations(models, q._orm.eagerLoads))
+        .then((models) => models.map((m) => q._orm.maps.reduce((m, map) => map(m), m)))
+      ;
+    }
+  }
+
+  /**
+   * get query that'll be executed for counts
+   * @return {knex.query} query to be executed to get count of scoped rows
+   */
+  countQuery() {
+    return this.attachOrmNSToQuery(
+      this.orm.knex.count('*').from((q) => {
+        q.from(this.tableName());
+
+        this.scopeTrack.apply(q);
+
+        if (!this.scopeTrack.hasScope('select')) {
+          q.select(this.c('*'));
+        }
+
+        q.as('t1');
+      })
+    );
   }
 
   /**
@@ -1119,23 +1146,25 @@ class Table {
       return this.where(...args).count();
     }
 
-    const q = this.attachOrmNSToQuery(
-      this.orm.knex.count('*').from((q) => {
-        q.from(this.tableName());
+    const q = this.countQuery();
 
-        this.scopeTrack.apply(q);
+    if (q._orm.cacheEnabled) {
+      const cacheKey = this.queryCacheKey(q);
 
-        if (!this.scopeTrack.hasScope('select')) {
-          q.select(this.c('*'));
+      return this.cache.get(cacheKey, null).then((result) => {
+        if (result === null) {
+          return q.then((result) => {
+            return this.cache.set(cacheKey, result, q._orm.cacheLifetime).then(() => result);
+          }).then((result) => {
+            return this.processResult(result, {count: true});
+          });
+        } else {
+          return this.processResult(result, {count: true});
         }
-
-        q.as('t1');
-      })
-    );
-
-    return this.fetchResultsFromCacheOrDatabase(q).then((result) => {
-      return this.processResult(result, {count: true});
-    });
+      });
+    } else {
+      return q.then((result) => this.processResult(result, {count: true}));
+    }
   }
 
   /**

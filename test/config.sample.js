@@ -14,6 +14,6 @@ module.exports = {
     host: 'localhost',
     port: '6379',
     keyPrefix: 'test.tabel.',
-    password: '28890c0b3a775ebd22755c0a1a35b9f4'
+    password: 'foobar'
   }
 };
