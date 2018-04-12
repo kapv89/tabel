@@ -17,8 +17,3 @@ Following tests are available:
 4. `npm run test.migrate.cli`
 
 Before running tests, copy `test/config.sample.js` to `test/config.js`.
-
-Todo:
-
-1. Implement a better caching story.
-2. Decide whether to expose orm's meta-capabilities to devs.
