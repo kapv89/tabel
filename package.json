@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
@@ -13,6 +13,13 @@
     "test.migrate.cli": "babel-node test/migrator/cli.js"
   },
   "author": "Kapil Verma <kapv89@gmail.com>",
+  "keywords": [
+    "object-relational-mapper",
+    "orm",
+    "postgresql",
+    "postgres",
+    "redis"
+  ],
   "license": "ISC",
   "dependencies": {
     "file-exists": "^2.0.0",
