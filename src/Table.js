@@ -1366,13 +1366,15 @@ class Table {
       return assign(condition, {[part]: uuid.v4()});
     }, {});
 
-    return this.newQuery().where(newKey).first().then((model) => {
-      if (isUsableObject(model)) {
-        return this.genKeyVal();
-      } else {
-        return newKey;
-      }
-    });
+    return Promise.resolve(newKey);
+
+    // return this.newQuery().where(newKey).first().then((model) => {
+    //   if (isUsableObject(model)) {
+    //     return this.genKeyVal();
+    //   } else {
+    //     return newKey;
+    //   }
+    // });
   }
 
   /**
