@@ -6,7 +6,7 @@
 
 `npm install --save tabel`
 
-#### v2.6.6
+#### v2.6.7
 
 #### [Read the docs](http://tabel.fractaltech.in).
 
