@@ -1,10 +1,10 @@
 {
   "name": "tabel",
-  "version": "2.6.8",
+  "version": "2.6.9",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
-  "homepage": "http://tabel.fractaltech.in",
+  "homepage": "http://tabel.tech",
   "scripts": {
     "clean": "rm -rf lib/",
     "build": "npm run clean && babel src --out-dir lib/ && cp src/migration.stub lib/migration.stub",
