@@ -6,6 +6,7 @@
   "main": "lib/Orm.js",
   "homepage": "http://tabel.tech",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "clean": "rm -rf lib/",
     "build": "npm run clean && babel src --out-dir lib/ && cp src/migration.stub lib/migration.stub",
     "test": "npm run test.orm && npm run test.collisions 1000 100 && npm run test.migrator default && npm run test.migrator custom && npm run test.migrate.cli",
