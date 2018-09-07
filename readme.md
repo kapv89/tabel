@@ -6,7 +6,7 @@
 
 `npm install --save tabel`
 
-#### v2.6.10
+#### v2.6.11
 
 #### [Read the docs](http://tabel.tech).
 
