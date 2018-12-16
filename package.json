@@ -29,9 +29,9 @@
     "isusableobject": "^0.1.2",
     "knex": "^0.14.6",
     "kredis": "^1.0.4",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.11",
     "md5": "^2.2.1",
-    "pg": "^7.4.1",
+    "pg": "^7.7.1",
     "uuid": "^2.0.3"
   },
   "devDependencies": {
