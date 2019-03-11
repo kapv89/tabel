@@ -1,6 +1,6 @@
 {
   "name": "tabel",
-  "version": "2.6.11",
+  "version": "2.6.12",
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
@@ -29,17 +29,16 @@
     "isusableobject": "^0.1.2",
     "knex": "^0.14.6",
     "kredis": "^1.0.4",
-    "lodash": "^4.17.10",
     "md5": "^2.2.1",
     "pg": "^7.4.1",
     "uuid": "^2.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-eslint": "^6.0.4",
+    "babel-eslint": "^6.1.2",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.5.0",
-    "eslint": "^2.12.0",
+    "eslint": "^2.13.1",
     "faker": "^3.1.0",
     "mysql": "^2.15.0",
     "rimraf": "^2.5.4"
