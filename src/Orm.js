@@ -1,5 +1,5 @@
 const knex = require('knex');
-const KRedis = require('kredis');
+const KRedis = require('./kredis');
 const {merge, isString} = require('lodash');
 
 const Table = require('./Table');
@@ -97,9 +97,9 @@ class Orm {
   load() {
     const promises = Array.from(this.tables.keys).map((name) => this.table(name).load());
 
-    if (this.cache) {
-      promises.push(this.cache.connect());
-    }
+    // if (this.cache) {
+    //   promises.push(this.cache.connect());
+    // }
 
     return Promise.all(promises);
   }

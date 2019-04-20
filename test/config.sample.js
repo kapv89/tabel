@@ -13,7 +13,6 @@ module.exports = {
   redis: {
     host: 'localhost',
     port: '6379',
-    keyPrefix: 'test.tabel.',
-    password: 'foobar'
+    keyPrefix: 'test.tabel.'
   }
 };
