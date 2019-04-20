@@ -17,3 +17,8 @@ Following tests are available:
 4. `npm run test.migrate.cli`
 
 Before running tests, copy `test/config.sample.js` to `test/config.js`.
+
+### V3 notes
+
+1. Added `scoperAsync`. `const {scoperAsync} = require('app/orm');`.
+2. Working on dynamic-query-chain-classes.
