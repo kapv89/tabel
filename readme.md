@@ -8,7 +8,7 @@
 
 #### v2.6.13
 
-#### [Read the docs](http://tabel.tech).
+#### [Read the docs](https://github.com/fractaltech/tabel/wiki).
 
 Following tests are available:
 1. `npm run test.orm`
