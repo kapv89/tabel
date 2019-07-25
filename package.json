@@ -9,7 +9,8 @@
     "prepublishOnly": "npm run build",
     "clean": "rm -rf lib/",
     "build": "npm run clean && babel src --out-dir lib/ && cp src/migration.stub lib/migration.stub",
-    "test": "npm run test.orm && npm run test.collisions 1000 100 && npm run test.migrator default && npm run test.migrator custom && npm run test.migrate.cli",
+    "test": "npm run test.kredis && npm run test.orm && npm run test.collisions 1000 100 && npm run test.migrator default && npm run test.migrator custom && npm run test.migrate.cli",
+    "test.kredis": "babel-node test/kredis/main.js",
     "test.orm": "babel-node test/orm/main.js",
     "test.collisions": "babel-node test/collisions/main.js",
     "test.migrator": "babel-node test/migrator/main.js",
@@ -28,9 +29,11 @@
     "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
     "knex": "^0.14.6",
-    "kredis": "^1.0.4",
     "md5": "^2.2.1",
-    "pg": "^7.4.1",
+    "pg": "^7.7.1",
+    "redisdsl": "^1.0.1",
+    "kredis": "^1.0.4",
+    "lodash": "^4.17.11",
     "uuid": "^2.0.3"
   },
   "devDependencies": {

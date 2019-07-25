@@ -1,5 +1,5 @@
 const knex = require('knex');
-const KRedis = require('kredis');
+const KRedis = require('./kredis');
 const {merge, isString} = require('lodash');
 
 const Table = require('./Table');
@@ -34,14 +34,14 @@ class Orm {
     // exports which can be exported in place of orm instance
     this.exports = {
       orm: this,
-      table: this.table.bind(this),
-      trx: this.trx.bind(this),
-      raw: this.raw.bind(this),
+      table: (...args) => this.table(...args),
+      trx: (...args) => this.trx(...args),
+      raw: (...args) => this.raw(...args),
       migrator: this.migrator,
       cache: this.cache,
       knex: this.knex,
-      scoper: this.scoper,
-      shape: this.shape
+      scoper: (...args) => this.scoper(...args),
+      shape: (...args) => this.shape(...args)
     };
   }
 
@@ -97,9 +97,9 @@ class Orm {
   load() {
     const promises = Array.from(this.tables.keys).map((name) => this.table(name).load());
 
-    if (this.cache) {
-      promises.push(this.cache.connect());
-    }
+    // if (this.cache) {
+    //   promises.push(this.cache.connect());
+    // }
 
     return Promise.all(promises);
   }
