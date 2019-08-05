@@ -101,7 +101,7 @@ module.exports = async (assert, client) => {
     const o3 = await client.dq('q');
     assert.deepEqual(o3.x, 3);
 
-    const o4 = await client.dq();
+    const o4 = await client.dq('q');
     assert.deepEqual(o4, null);
   })();
 };

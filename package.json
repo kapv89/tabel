@@ -29,11 +29,10 @@
     "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
     "knex": "^0.14.6",
+    "lodash": "^4.17.11",
     "md5": "^2.2.1",
     "pg": "^7.7.1",
     "redisdsl": "^1.0.1",
-    "kredis": "^1.0.4",
-    "lodash": "^4.17.11",
     "uuid": "^2.0.3"
   },
   "devDependencies": {

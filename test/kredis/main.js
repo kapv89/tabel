@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-const Client = require('../../src/kredis/Client');
+const Client = require('../../src/kredis');
 const config = require('../config');
 
 const testClient = require('./testClient');

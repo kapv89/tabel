@@ -5,10 +5,7 @@ const Hash = require('./Hash');
 
 class Connection {
   constructor(config) {
-    this.config = {
-      ...config,
-      prefix: config.keyPrefix
-    };
+    this.config = config;
 
     const {
       quit,
@@ -39,14 +36,14 @@ class Connection {
           const pattern = isString(prefix) ? `${prefix}*` : `*`;
 
           const luaScript = [
-            `local keys = redis.call("keys", ARGV[1])`,
+            `local keys = redis.call("keys", "${this.config.prefix}${pattern}")`,
             `for i=1,#keys,5000 do`,
             `    redis.call("del", unpack(keys, i, math.min(i+4999, #keys)))`,
             `end`,
             `return keys`
           ].join('\r\n');
 
-          return this.cmd.rEval(luaScript, `${this.config.prefix}${pattern}`);
+          return this.cmd.rEval(luaScript, 0);
         }
       }
     });
