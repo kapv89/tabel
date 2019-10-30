@@ -27,7 +27,7 @@
   "dependencies": {
     "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
-    "knex": "^0.14.6",
+    "knex": "^0.19.5",
     "kredis": "^1.0.4",
     "md5": "^2.2.1",
     "pg": "^7.4.1",
