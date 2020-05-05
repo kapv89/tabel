@@ -971,7 +971,7 @@ class Table {
         } else {
           return assign(processed, {[key]: result[key]});
         }
-      }, {__table: this.tableName()});
+      }, {});
     } else {
       // processing other random values
       return result;

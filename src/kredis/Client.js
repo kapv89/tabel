@@ -5,7 +5,10 @@ const Hash = require('./Hash');
 
 class Connection {
   constructor(config) {
-    this.config = config;
+    this.config = {
+      ...config,
+      ...('keyPrefix' in config ? {prefix: config.keyPrefix} : {})
+    };
 
     const {
       quit,
