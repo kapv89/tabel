@@ -63,12 +63,12 @@ function testEagerLoads(assert, orm) {
 
       return table('photos').eagerLoad('doc', 'detail').all().then((photos) => photos.forEach((photo) => {
         assert.ok(
-          photo.doc_type === photo.doc.__table && photo.doc_id === photo.doc.id,
+          photo.doc_id === photo.doc.id,
           'related doc loaded'
         );
 
         assert.ok(
-          all[photo.doc.__table].map(({id}) => id).indexOf(photo.doc.id) > -1,
+          all[photo.doc_type].map(({id}) => id).indexOf(photo.doc.id) > -1,
           'valid doc loaded'
         );
 
@@ -175,12 +175,12 @@ function testEagerLoads(assert, orm) {
     }).then(() => {
       return table('users').eagerLoad('posts.comments.user', 'profilePhoto').all()
         .then((users) => users.forEach((user) => {
-          assert.ok(user.profilePhoto.__table === 'photos', 'correct profile photo loaded');
+          assert.ok(user.profilePhoto, 'correct profile photo loaded');
           user.posts.forEach((post) => {
-            assert.ok(post.__table === 'posts', 'correct post loaded');
+            assert.ok(post, 'correct post loaded');
             post.comments.forEach((comment) => {
-              assert.ok(comment.__table === 'comments', 'correct comment loaded');
-              assert.ok(comment.user.__table === 'users', 'correct comment-user loaded');
+              assert.ok(comment, 'correct comment loaded');
+              assert.ok(comment.user, 'correct comment-user loaded');
             });
           });
         }))
@@ -191,7 +191,7 @@ function testEagerLoads(assert, orm) {
         'photos'
       ).all().then((posts) => posts.forEach((post) => {
         post.comments.forEach((comment) => {
-          assert.ok(comment.__table === 'comments');
+          assert.ok(comment);
           assert.ok(
             comment.user === null ||
             all.users.slice(0, 2).map(({id}) => id).indexOf(comment.user.id) > -1
