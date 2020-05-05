@@ -28,7 +28,7 @@ function runTests(numTestCases, chunk) {
     }))
     .then(() => orm.defineTable({
       name: 'collisions',
-      props: {autoId: true}
+      props: {uuid: true}
     }))
     .then(() => insert(table, parseInt(numTestCases, 10), parseInt(chunk, 10)))
     .then(() => console.log(`${parseInt(numTestCases, 10)} cases tested`))

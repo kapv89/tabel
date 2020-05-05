@@ -265,13 +265,32 @@ function testQueryBuilding(assert, orm) {
         q.from('photos').select('photos.*').distinct().as('t1');
       })
     ])).then(([count, knexResult]) => {
-      assert.deepEqual(
-        count,
-        parseInt(knexResult[0].count, 10),
-        'count works and creates a subquery'
-      );
+      if (isPostgres(knex)) {
+        assert.deepEqual(
+          count,
+          parseInt(knexResult[0].count, 10),
+          'count works and creates a subquery'
+        );
+      } else if (isMysql(knex)) {
+        assert.deepEqual(
+          count,
+          knexResult[0]['count(*)']
+        );
+      } else {
+        throw new UnsupportedDbError;
+      }
     });
   });
 }
+
+function isMysql(knex) {
+  return knex.context.client.config.client === 'mysql';
+}
+
+function isPostgres(knex) {
+  return ['pg', 'postgresql'].indexOf(knex.context.client.config.client) > -1;
+}
+
+class UnsupportedDbError extends Error {}
 
 module.exports = testQueryBuilding;

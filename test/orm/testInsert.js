@@ -13,7 +13,7 @@ function testInsert(assert, orm) {
       password: table('users').hashPassword(faker.internet.password())
     }).then((user) => knex('users').where('id', user.id).first().then((knexUser) => ({user, knexUser})))
       .then(({user, knexUser}) => {
-        assert.ok(user.hasOwnProperty('id'), 'insertion appends id automatically in tables with autoId true');
+        assert.ok(user.hasOwnProperty('id'), 'insertion appends id automatically in tables with uuid true');
         assert.deepEqual(knexUser.id, user.id, 'the inserted record exists in db');
         assert.deepEqual(knexUser.username, user.username, 'with same fields');
         assert.deepEqual(knexUser.password, user.password, '...checking another field');
@@ -35,7 +35,7 @@ function testInsert(assert, orm) {
       .then((posts) => Promise.all(posts.map((post) => {
         return knex('posts').where('id', post.id).first().then((knexPost) => ({post, knexPost}))
           .then(({post, knexPost}) => {
-            assert.ok('id' in post, 'insertion appends id automatically in tables with autoId true');
+            assert.ok('id' in post, 'insertion appends id automatically in tables with uuid true');
             assert.deepEqual(knexPost.id, post.id, 'the inserted record exists in db');
             assert.deepEqual(knexPost.title, post.title, 'with same fields');
             assert.deepEqual(knexPost.body, post.body, '...checking another field');

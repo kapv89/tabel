@@ -4,7 +4,7 @@
   "repository": "https://github.com/fractaltech/tabel",
   "description": "A simple orm for PostgreSQL which works with simple javascript objects and arrays",
   "main": "lib/Orm.js",
-  "homepage": "http://tabel.tech",
+  "homepage": "https://github.com/fractaltech/tabel",
   "scripts": {
     "prepublishOnly": "npm run build",
     "clean": "rm -rf lib/",
@@ -22,7 +22,8 @@
     "orm",
     "postgresql",
     "postgres",
-    "redis"
+    "redis",
+    "mysql"
   ],
   "license": "ISC",
   "dependencies": {

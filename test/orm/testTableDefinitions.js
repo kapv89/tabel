@@ -5,7 +5,7 @@ function testTableDefinitions(assert, orm) {
     name: 'users',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -38,8 +38,8 @@ function testTableDefinitions(assert, orm) {
         return new Buffer(password).toString('base64');
       },
 
-      autoIdFlag() {
-        return this.props.autoId;
+      uuidFlag() {
+        return this.props.uuid;
       }
     }
   });
@@ -48,7 +48,7 @@ function testTableDefinitions(assert, orm) {
     name: 'roles',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -64,7 +64,7 @@ function testTableDefinitions(assert, orm) {
 
     props: {
       key: ['user_id', 'role_id'],
-      autoId: false,
+      uuid: false,
       timestamps: true
     }
   });
@@ -73,7 +73,7 @@ function testTableDefinitions(assert, orm) {
     name: 'posts',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -96,7 +96,7 @@ function testTableDefinitions(assert, orm) {
     name: 'comments',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -129,7 +129,7 @@ function testTableDefinitions(assert, orm) {
     name: 'photos',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -162,7 +162,7 @@ function testTableDefinitions(assert, orm) {
     name: 'tags',
 
     props: {
-      autoId: true,
+      uuid: true,
       timestamps: true
     },
 
@@ -206,7 +206,6 @@ function testTableDefinitions(assert, orm) {
 
     props: {
       key: ['tagable_type', 'tagable_id', 'tag_id'],
-      autoId: false,
       timestamps: true
     }
   });
@@ -219,7 +218,7 @@ function testTableDefinitions(assert, orm) {
   });
 
   // check to see if methods work as expected
-  assert.deepEqual(orm.tbl('users').autoIdFlag(), true, 'method test#1 pass');
+  assert.deepEqual(orm.tbl('users').uuidFlag(), true, 'method test#1 pass');
   assert.deepEqual(
     orm.tbl('users').hashPassword('foo'),
     new Buffer('foo').toString('base64'),

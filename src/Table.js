@@ -7,7 +7,7 @@
   props: {
     key: 'id',
     // default key column, can be ['user_id', 'post_id'] for composite keys
-    autoId: false,
+    uuid: false,
     // by default we don't assume that you use an auto generated db id
     perPage: 25,
     // standard batch size per page used by `forPage` method
@@ -954,7 +954,13 @@ class Table {
 
     if (count === true) {
       // result[0].count is how knex gives count query results
-      return parseInt(result[0].count, 10);
+      if (isPostgres(this.orm)) {
+        return parseInt(result[0].count, 10);
+      } else if (isMysql(this.orm)) {
+        return result[0]['count(*)'];
+      } else {
+        throw new UnsupportedDbError;
+      }
     } else if (isArray(result)) {
       // processing an array of response
       return result.map((row) => this.processResult(row, {count}));
@@ -1179,9 +1185,17 @@ class Table {
     if (labels.indexOf('orderBy') > -1 || labels.indexOf('orderByRaw') > -1) {
       return this.fork();
     } else {
-      return this.fork().orderByRaw(
-        `(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}::text`).join(` || '-' || `)}) desc`
-      );
+      if (isPostgres(this.orm)) {
+        return this.fork().orderByRaw(
+          `(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}::text`).join(` || '-' || `)}) desc`
+        );
+      } else if (isMysql(this.orm)) {
+        return this.fork().orderByRaw(
+          `concat(${(isArray(this.key()) ? this.key() : [this.key()]).map((c) => `${this.c(c)}`).join(`, '-', `)}) desc`
+        );
+      } else {
+        throw new UnsupportedDbError;
+      }
     }
   }
 
@@ -1342,21 +1356,11 @@ class Table {
   }
 
   /**
-   * check if db is postgres
-   * @return {Boolean} true/false
-   */
-  isPostgresql() {
-    return ['postgresql', 'pg', 'postgres'].indexOf(
-      this.orm.knex.client.config.client
-    ) > -1;
-  }
-
-  /**
-   * generate a new key-val if autoId true
+   * generate a new key-val if uuid true
    * @return {Promise} uuid
    */
   genKeyVal() {
-    if (!this.props.autoId) {
+    if (!this.props.uuid) {
       return Promise.resolve({});
     }
 
@@ -1367,14 +1371,6 @@ class Table {
     }, {});
 
     return Promise.resolve(newKey);
-
-    // return this.newQuery().where(newKey).first().then((model) => {
-    //   if (isUsableObject(model)) {
-    //     return this.genKeyVal();
-    //   } else {
-    //     return newKey;
-    //   }
-    // });
   }
 
   /**
@@ -1424,7 +1420,14 @@ class Table {
           opFlags
         ));
 
-        return this.newQuery().returning('*').insert(model).then(([model]) => model);
+        if (isPostgres(this.orm)) {
+          return this.newQuery().returning('*').insert(model).then(([model]) => model);
+        } else if (isMysql(this.orm)) {
+          // works with uuid
+          return this.newQuery().insert(model).then(() => model);
+        } else {
+          throw new UnsupportedDbError;
+        }
       })
     ;
   }
@@ -1480,7 +1483,14 @@ class Table {
         // we return the first object when returning is true
         // use update method uses this, useful for handpicked updates
         // which is mostly the case with business logic
-        return this.query().returning('*').update(values).then(([model]) => model);
+        if (isPostgres(this.orm)) {
+          return this.query().returning('*').update(values).then(([model]) => model);
+        } else if (isMysql(this.orm)) {
+          const fork = this.fork();
+          return this.query().update(values).then(() => fork.first());
+        } else {
+          throw new UnsupportedDbError;
+        }
       } else {
         // use this for batch updates. we don't return anything
         // in batch updates. if you want returning batch updates,
@@ -1597,5 +1607,15 @@ class Table {
     return new MorphTo(this, tables, typeField, foreignKey);
   }
 }
+
+function isMysql(orm) {
+  return orm.knex.context.client.config.client === 'mysql';
+}
+
+function isPostgres(orm) {
+  return ['pg', 'postgresql'].indexOf(orm.knex.context.client.config.client) > -1;
+}
+
+class UnsupportedDbError extends Error {}
 
 module.exports = Table;

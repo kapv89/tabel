@@ -1,7 +1,7 @@
 const knex = require('knex');
-const KRedis = require('./kredis');
 const {merge, isString} = require('lodash');
 
+const KRedis = require('./kredis');
 const Table = require('./Table');
 const Scoper = require('./Scoper');
 const Shape = require('./Shape');
@@ -192,8 +192,8 @@ class Orm {
         props: {
           key: 'id',
           // default key column, can be ['user_id', 'post_id'] for composite keys
-          autoId: false,
-          // by default we don't assume that you use an auto generated db id
+          uuid: false,
+          // by default we don't assume that you use an auto generated uuid as db id
           perPage: 25,
           // standard batch size per page used by `forPage` method
           // forPage method uses offset
