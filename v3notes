@@ -1,3 +1,4 @@
 1. using rdisdsl instead of kredis
 2. `autoId` table definition flag changed to `uuid`
 3. Added mysql support with `uuid` flag `true`
+4. Added mysql support with `increments` flag true

@@ -1423,8 +1423,14 @@ class Table {
         if (isPostgres(this.orm)) {
           return this.newQuery().returning('*').insert(model).then(([model]) => model);
         } else if (isMysql(this.orm)) {
-          // works with uuid
-          return this.newQuery().insert(model).then(() => model);
+          if (this.props.increments) {
+            return this.newQuery().insert(model).then(([id]) => ({
+              ...model,
+              id
+            }));
+          } else {
+            return this.newQuery().insert(model).then(() => model);
+          }
         } else {
           throw new UnsupportedDbError;
         }
@@ -1486,8 +1492,12 @@ class Table {
         if (isPostgres(this.orm)) {
           return this.query().returning('*').update(values).then(([model]) => model);
         } else if (isMysql(this.orm)) {
-          const fork = this.fork();
-          return this.query().update(values).then(() => fork.first());
+          return this.fork().first().then(model => {
+            return this.query().update(values).then(() => ({
+              ...model,
+              ...values
+            }));
+          });
         } else {
           throw new UnsupportedDbError;
         }

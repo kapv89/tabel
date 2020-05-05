@@ -29,6 +29,7 @@ const testReduce = require('./testReduce');
 const testMap = require('./testMap');
 const testShape = require('./testShape');
 const testCache = require('./testCache');
+const testAutoIncrementIdTables = require('./testAutoIncrementIdTables');
 
 // handle promise errors
 process.on('unhandledRejection', err => { throw err; });
@@ -36,26 +37,36 @@ process.on('unhandledRejection', err => { throw err; });
 runTests(...process.argv.slice(2));
 
 function runTests() {
-  const orm = new Tabel(config);
+  return (() => {
+    const orm = new Tabel(config);
 
-  return teardownTables(orm).then(() => setupTables(orm))
-    .then(() => [
-      testTableDefinitions,
-      testInsert,
-      testQueryBuilding,
-      testUpdate,
-      testDelete,
-      testEagerLoads,
-      testScopesAndJoints,
-      testRelationJoints,
-      testReduce,
-      testMap,
-      testShape,
-      testCache
-    ].reduce((chain, test) => chain.then(() => test(assert, orm)), Promise.resolve()))
-    .then(() => teardownTables(orm))
-    .then(() => orm.close())
-  ;
+    return teardownTables(orm).then(() => setupTables(orm))
+      .then(() => [
+        testTableDefinitions,
+        testInsert,
+        testQueryBuilding,
+        testUpdate,
+        testDelete,
+        testEagerLoads,
+        testScopesAndJoints,
+        testRelationJoints,
+        testReduce,
+        testMap,
+        testShape,
+        testCache,
+      ].reduce((chain, test) => chain.then(() => test(assert, orm)), Promise.resolve()))
+      .then(() => teardownTables(orm))
+      .then(() => orm.close())
+    ;
+  })().then(() => {
+    const orm = new Tabel(config);
+    return teardownAutoIncrementingTables(orm)
+      .then(() => setupAutoIncrementingTables(orm))
+      .then(() => testAutoIncrementIdTables(assert, orm))
+      .then(() => teardownAutoIncrementingTables(orm))
+      .then(() => orm.close())
+    ;
+  })
 }
 
 function setupTables({knex}) {
@@ -138,4 +149,38 @@ function teardownTables({knex}) {
     'users', 'roles', 'user_role', 'posts', 'comments', 'photos',
     'photo_details', 'tags', 'tagable_tag'
   ].map((t) => knex.schema.dropTableIfExists(t)));
+}
+
+function setupAutoIncrementingTables({knex}) {
+  return Promise.all([
+    knex.schema.createTable('products', (t) => {
+      t.increments('id');
+      t.integer('category_id').unsigned();
+      t.string('name');
+      t.timestamps();
+    }),
+
+    knex.schema.createTable('categories', (t) => {
+      t.increments('id');
+      t.string('name');
+      t.timestamps();
+    }),
+
+    knex.schema.createTable('sellers', (t) => {
+      t.increments('id');
+      t.string('name');
+      t.timestamps();
+    }),
+
+    knex.schema.createTable('product_seller', (t) => {
+      t.integer('product_id').unsigned();
+      t.integer('seller_id').unsigned();
+
+      t.primary(['product_id', 'seller_id']);
+    })
+  ]);
+}
+
+function teardownAutoIncrementingTables({knex}) {
+  return Promise.all(['products', 'categories', 'sellers', 'product_seller'].map(t => knex.schema.dropTableIfExists(t)));
 }

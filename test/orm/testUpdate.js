@@ -5,15 +5,13 @@ function testUpdate(assert, orm) {
 
   return table('posts').all()
     .then((allPosts) => {
-      const yesterday = (() => {
-        const d = new Date();
-        d.setUTCSeconds(d.getUTCSeconds() - 86400);
-        return d;
-      })();
+      const post0 = allPosts[0];
+      const newTitle = post0.title.slice(0, Math.floor(post0.title.length / 2));
 
-      return table('posts').update(allPosts[0].id, {created_at: yesterday})
+      return table('posts').update(post0.id, {title: newTitle})
         .then((post) => {
-          assert.deepEqual(post.id, allPosts[0].id);
+          assert.deepEqual(post.id, post0.id);
+          assert.deepEqual(post.title, newTitle);
           console.log('update test passed');
         })
       ;
