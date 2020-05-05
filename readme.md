@@ -4,8 +4,10 @@
 
 #### MIT License
 
-`npm install --save tabel`
+`npm install --save tabel` this installs v3
 
+If you are an existing tabel user, use:
+`npm install --save tabel@2`
 
 ## Docs only for v2
 #### [Read the docs](https://github.com/fractaltech/tabel/wiki).
@@ -23,6 +25,6 @@ Before running tests, copy `test/config.sample.js` to `test/config.js`.
 1. Added `scoperAsync`. `const {scoperAsync} = require('app/orm');`.
 2. Working on dynamic-query-chain-classes.
 3. using rdisdsl instead of kredis
-4. `autoId` table definition flag changed to `uuid`
+4. `autoId` table definition flag changed to `uuid`. Breaks BC
 5. Added mysql support with `uuid` flag `true`
 6. Added mysql support with `increments` flag `true`
