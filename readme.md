@@ -6,6 +6,8 @@
 
 `npm install --save tabel`
 
+
+## Docs only for v2
 #### [Read the docs](https://github.com/fractaltech/tabel/wiki).
 
 Following tests are available:
@@ -20,3 +22,7 @@ Before running tests, copy `test/config.sample.js` to `test/config.js`.
 
 1. Added `scoperAsync`. `const {scoperAsync} = require('app/orm');`.
 2. Working on dynamic-query-chain-classes.
+3. using rdisdsl instead of kredis
+4. `autoId` table definition flag changed to `uuid`
+5. Added mysql support with `uuid` flag `true`
+6. Added mysql support with `increments` flag `true`
