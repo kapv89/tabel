@@ -74,4 +74,29 @@ module.exports = async (assert, orm) => {
   console.log('testing hasMany eagerloads with autoincrement');
   const c1WithProducts = await table('categories').eagerLoad('products').find(c1.id)
   ok(isArray(c1WithProducts.products), 'category.products eagerload works fine');
+
+  const [s1, s2] = await table('sellers').insert([
+    {name: 's foo'},
+    {name: 's bar'}
+  ]);
+
+  await table('product_seller').insert([
+    {product_id: p1.id, seller_id: s1.id},
+    {product_id: p2.id, seller_id: s1.id},
+    {product_id: p2.id, seller_id: s2.id},
+    {product_id: p3.id, seller_id: s2.id}
+  ]);
+
+  console.log('testing multiple col whereIn');
+
+  const pivots = await table('product_seller')
+    .whereIn(['product_id', 'seller_id'], [
+      {product_id: p1.id, seller_id: s1.id},
+      {product_id: p2.id, seller_id: s2.id}
+    ])
+    .all()
+  ;
+
+  ok(isArray(pivots), 'pivots fetched');
+  deepEqual(pivots.length, 2, 'correct no. of pivots fetched');
 };

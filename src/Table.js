@@ -456,7 +456,7 @@ class Table {
         case 'not in': return this.whereIn(field, val);
         case 'between': return this.whereNotBetween(field, val);
         case 'not between': return this.whereBetween(field, val);
-        default: return this.scope((q) => q.whereNot(this.c(field), op, val), 'where');
+        default: return this.scope((q) => q.whereNot(this.c(field), op, val), 'whereNot');
       }
     }
 
@@ -504,7 +504,7 @@ class Table {
 
   /**
    * scope a whereIn condition
-   * @param  {string} field field name
+   * @param  {string|[string]} field field name
    * @param  {[mixed]} vals values to match against
    * @return {this} current instance
    *
@@ -517,7 +517,7 @@ class Table {
     } else {
       if (isArray(field)) {
         return this.whereRaw(
-          `(${this.c(field)}) in (${vals.map(() => `(${field.map(() => '?')})`)})`,
+          `(${this.c(field).join(',')}) in (${vals.map(() => `(${field.map(() => '?').join(',')})`).join(',')})`,
           vals.map((v) => field.map((f) => v[f])).reduce((all, item) => all.concat(item), [])
         );
       } else {
@@ -528,7 +528,7 @@ class Table {
 
   /**
    * scope an orWhereIn condition
-   * @param  {string} field field name
+   * @param  {string|[string]} field field name
    * @param  {[mixed]} vals values to match against
    * @return {this} current instance
    *
@@ -542,7 +542,7 @@ class Table {
     } else {
       if (isArray(field)) {
         return this.orWhereRaw(
-          `(${this.c(field)}) in (${vals.map(() => `(${field.map(() => '?')})`)})`,
+          `(${this.c(field).join(',')}) in (${vals.map(() => `(${field.map(() => '?').join(',')})`).join(',')})`,
           vals.map((v) => field.map((f) => v[f])).reduce((all, item) => all.concat(item), [])
         );
       } else {
@@ -553,7 +553,7 @@ class Table {
 
   /**
    * scope a whereNotIn condition
-   * @param  {string} field field name
+   * @param  {string|[string]} field field name
    * @param  {[mixed]} vals values to match against
    * @return {this} current instance
    */
@@ -563,7 +563,7 @@ class Table {
     } else {
       if (isArray(field)) {
         return this.whereRaw(
-          `(${this.c(field)}) not in (${vals.map(() => `(${field.map(() => '?')})`)})`,
+          `(${this.c(field).join(',')}) not in (${vals.map(() => `(${field.map(() => '?').join(',')})`).join(',')})`,
           vals.map((v) => field.map((f) => v[f])).reduce((all, item) => all.concat(item), [])
         );
       } else {
@@ -574,7 +574,7 @@ class Table {
 
   /**
    * scope a whereNotIn condition
-   * @param  {string} field field name
+   * @param  {string|[string]} field field name
    * @param  {[mixed]} vals values to match against
    * @return {this} current instance
    */
@@ -584,7 +584,7 @@ class Table {
     } else {
       if (isArray(field)) {
         return this.orWhereRaw(
-          `(${this.c(field)}) not in (${vals.map(() => `(${field.map(() => '?')})`)})`,
+          `(${this.c(field).join(',')}) not in (${vals.map(() => `(${field.map(() => '?').join(',')})`).join(',')})`,
           vals.map((v) => field.map((f) => v[f])).reduce((all, item) => all.concat(item), [])
         );
       } else {
