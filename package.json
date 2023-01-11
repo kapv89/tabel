@@ -29,7 +29,7 @@
   "dependencies": {
     "file-exists": "^2.0.0",
     "isusableobject": "^0.1.2",
-    "knex": "^0.21.1",
+    "knex": "^2.4.0",
     "lodash": "^4.17.11",
     "md5": "^2.2.1",
     "redisdsl": "^1.0.3",
